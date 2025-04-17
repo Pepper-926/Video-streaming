@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro | Flixy</title>
+  <link rel="stylesheet" href="{% static 'usuarios/css/login.css' %}">
+  <link rel="icon" type="image/x-icon" href="img/icon.png">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="logo">
+      <h1>Crea tu cuenta en Flixy</h1>
+      <p>Comparte tus videos con el mundo</p>
+    </div>
+
+
+    <form class="auth-form" id="register-form" method="POST">
+      {% csrf_token %}
+
+      <div class="profile-picture-section">
+        <div class="profile-picture-preview" id="profile-preview">
+          <i class="fas fa-user"></i>
+          <img id="profile-image" src="" alt="Previsualización">
+        </div>
+        <div class="upload-btn-wrapper">
+          <button class="upload-btn"><i class="fas fa-camera"></i> Subir foto</button>
+          <input type="file" id="profile-photo" name="foto_perfil" accept="image/*">
+        </div>
+      </div>
+
+
+      <div class="form-group">
+        <label for="channel-name">Nombre del canal <span class="required">*</span></label>
+        <div class="input-icon">
+          <i class="fas fa-tv"></i>
+          <input type="text" id="channel-name" name="nombre_canal" placeholder="Ej: TechReviewsConDaniel" required>
+        </div>
+        <p class="input-hint">Este será el nombre que verán los demás usuarios</p>
+      </div>
+
+   
+      <div class="form-group">
+        <label for="first-name">Nombre(s) <span class="required">*</span></label>
+        <div class="input-icon">
+          <i class="fas fa-user"></i>
+          <input type="text" id="first-name" name="nombre" placeholder="Ej: Daniel" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="last-name">Apellido paterno</label>
+        <div class="input-icon">
+          <i class="fas fa-user"></i>
+          <input type="text" id="last-name" name="a_pat" placeholder="Opcional">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="mother-last-name">Apellido materno</label>
+        <div class="input-icon">
+          <i class="fas fa-user"></i>
+          <input type="text" id="mother-last-name" name="a_mat" placeholder="Opcional">
+        </div>
+      </div>
+
+     
+      <div class="form-group">
+        <label for="birth-date">Fecha de nacimiento <span class="required">*</span></label>
+        <div class="input-icon">
+          <i class="fas fa-calendar-alt"></i>
+          <input type="date" id="birth-date" name="nacimiento" required>
+        </div>
+        <p class="input-hint">Debes tener al menos 13 años</p>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Correo electrónico <span class="required">*</span></label>
+        <div class="input-icon">
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="email" name="correo" placeholder="tucorreo@ejemplo.com" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña <span class="required">*</span></label>
+        <div class="input-icon">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="password" name="contra" placeholder="••••••••" required>
+          <button type="button" class="show-password"><i class="fas fa-eye"></i></button>
+        </div>
+        <div class="password-strength">
+          <span class="strength-bar"></span>
+          <span class="strength-text">Seguridad: baja</span>
+        </div>
+        <ul class="password-requirements">
+          <li data-requirement="length">Mínimo 8 caracteres</li>
+          <li data-requirement="uppercase">1 letra mayúscula</li>
+          <li data-requirement="number">1 número</li>
+          <li data-requirement="special">1 carácter especial</li>
+        </ul>
+      </div>
+
+      <div class="form-group">
+        <label for="confirm-password">Confirmar Contraseña <span class="required">*</span></label>
+        <div class="input-icon">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="confirm-password" name="confirmar_contrasena" placeholder="••••••••" required>
+        </div>
+      </div>
+
+      <div class="form-group terms">
+        <input type="checkbox" id="terms" name="terminos" required>
+        <label for="terms">Acepto los <a href="#">Términos de Servicio</a> y <a href="#">Política de Privacidad</a> <span class="required">*</span></label>
+      </div>
+
+      <button type="submit" class="btn-primary">Crear cuenta</button>
+
+      <div class="auth-switch">
+        ¿Ya tienes una cuenta? <a href="login.html">Inicia Sesión</a>
+      </div>
+    </form>
+  </div>
+
+  <script src="{% static 'usuarios/js/login.js' %}"></script>
+</body>
+</html>
