@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/x-icon" href="img/icon.png">
+  <link rel="icon" type="image/x-icon" href="{% static 'videos/img/icon.png' %}">
   <link rel="stylesheet" href="{% static 'videos/css/inicio.css' %}">
   <title>Flixy</title>
 </head>
@@ -20,16 +20,18 @@
     </div>
     <div class="user-actions">
       <div class="top-bar">
-        <img src="img/subir.png" alt="Perfil">
+        <a href="/videos/upload">
+          <img src="{% static 'videos/img/subir.png' %}" alt="Perfil">
+        </a>
       </div>
         <div class="top-bar">
           <a href="notis.html">
-            <img src="img/notis.png" alt="Perfil">
+            <img src="{% static 'videos/img/notis.png' %}" alt="Perfil">
           </a>
         </div>
       <div class="top-bar">
         <a href="perfil.html">
-          <img src="img/perfil.png" alt="Perfil">
+          <img src="{% static 'videos/img/perfil.png' %}" alt="Perfil">
        </a>
       </div>
     </div>
@@ -40,7 +42,7 @@
   <aside class="sidebar">
     <nav>
       <ul>
-        <li><a href="inicio.html">Inicio</a></li>
+        <li><a href="/">Inicio</a></li>
         <li><a href="subs.html ">Suscripciones</a></li>
         <li><a href="#">Biblioteca</a></li>
         <li><a href="historial.html">Historial</a></li>
