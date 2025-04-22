@@ -10,7 +10,6 @@ from django.db import models
 
 class Usuarios(models.Model):
     id_usuario = models.AutoField(primary_key=True)
-    nombre_canal = models.CharField(max_length=20)
     nombre = models.CharField(max_length=16)
     a_pat = models.CharField(max_length=16, blank=True, null=True)
     a_mat = models.CharField(max_length=16, blank=True, null=True)

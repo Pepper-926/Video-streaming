@@ -6,6 +6,9 @@ class Etiquetas(models.Model):
     categoria = models.CharField(unique=True, max_length=15)
     descripcion = models.CharField(max_length=50)
 
+    def __str__(self):
+        return f"{self.categoria}: {self.descripcion}"
+
     class Meta:
         managed = False
         db_table = 'etiquetas'

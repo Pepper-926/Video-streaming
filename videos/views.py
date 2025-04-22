@@ -1,5 +1,4 @@
 import os
-from django.utils import timezone
 from django.shortcuts import render, redirect
 from .models import Videos, VideosEtiquetas, Etiquetas
 from .forms import VideoUploadForm
@@ -41,15 +40,12 @@ def subir_video(request):
                 id_canal=request.user.canal.id  # suponiendo que el user está relacionado con el canal
             )
 
-            # Procesar etiquetas
-            etiquetas_str = form.cleaned_data['tags']
-            if etiquetas_str:
-                for nombre in [et.strip() for et in etiquetas_str.split(',') if et.strip()]:
-                    etiqueta, _ = Etiquetas.objects.get_or_create(nombre=nombre)
-                    VideosEtiquetas.objects.create(id_video=video, id_etiqueta=etiqueta)
+            # Procesar etiquetas (checkboxes seleccionados)
+            etiquetas_seleccionadas = form.cleaned_data['tags']
+            for etiqueta in etiquetas_seleccionadas:
+                VideosEtiquetas.objects.create(id_video=video, id_etiqueta=etiqueta)
 
-            return redirect('home')  # redirige según tu flujo
+
+            return redirect('/')  # redirige según tu flujo
     else:
-        form = VideoUploadForm()
-
-    return render(request, 'videos/subir_video.html', {'form': form})
+        return redirect('/videos/upload')
