@@ -23,38 +23,37 @@
     <main class="upload-content">
         <div class="upload-container">
             <h1>Subir Video a Flixy</h1>
-            <form class="upload-form" action="#" method="POST" enctype="multipart/form-data">
+            <form class="upload-form" method="POST" action="/videos" enctype="multipart/form-data">
+                {% csrf_token %}
+
                 <div class="form-group">
-                    <label for="title" required>Título del Video</label>
-                    <input type="text" id="title" name="title" required>
+                    <label for="title">Título del Video</label>
+                    {{ form.title }}
                 </div>
 
                 <div class="form-group">
                     <label for="description">Descripción</label>
-                    <textarea id="description" name="description" rows="4"></textarea>
+                    {{ form.description }}
                 </div>
 
                 <div class="form-group">
-                    <label for="video-file" required>Archivo de Video</label>
-                    <input type="file" id="video-file" name="video-file" accept="video/*" required>
+                    <label for="video-file">Archivo de Video</label>
+                    {{ form.file }}
                 </div>
 
                 <div class="form-group">
                     <label for="thumbnail">Miniatura (opcional)</label>
-                    <input type="file" id="thumbnail" name="thumbnail" accept="image/*">
+                    {{ form.thumbnail }}
                 </div>
 
                 <div class="form-group">
                     <label for="visibility">Visibilidad</label>
-                    <select id="visibility" name="visibility">
-                        <option value="public">Público</option>
-                        <option value="private">Privado</option>
-                    </select>
+                    {{ form.visibility }}
                 </div>
 
                 <div class="form-group">
                     <label for="tags">Etiquetas (separadas por comas)</label>
-                    <input type="text" id="tags" name="tags" placeholder="ej: comedia, tutorial, gaming">
+                    {{ form.tags }}
                 </div>
 
                 <button type="submit" class="submit-btn">Subir Video</button>
