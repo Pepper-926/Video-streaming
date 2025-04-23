@@ -3,7 +3,6 @@ from django.db import models
 class Canales(models.Model):
     id_canal = models.AutoField(primary_key=True)
     nombre = models.CharField(unique=True, max_length=30)
-    subscriptores = models.IntegerField()
     id_usuario = models.ForeignKey('usuarios.Usuarios', on_delete=models.CASCADE, db_column='id_usuario')
 
     class Meta:
