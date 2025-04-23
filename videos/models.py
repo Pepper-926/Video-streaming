@@ -42,6 +42,7 @@ class VideosEtiquetas(models.Model):
         unique_together = (('id_video', 'id_etiqueta'),)
 
 
+
 class LikesDislikesVideos(models.Model):
     id_usuario = models.ForeignKey('usuarios.Usuarios', on_delete=models.CASCADE, db_column='id_usuario')
     id_video = models.ForeignKey(Videos, on_delete=models.CASCADE, db_column='id_video')
