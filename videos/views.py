@@ -1,4 +1,5 @@
 import os #Para trabajar con paths y nombres de archivos
+import shutil #Para eliminar directorios completos
 from django.shortcuts import render, redirect
 from .models import Videos, VideosEtiquetas, Etiquetas
 from canales.models import Canales
@@ -8,7 +9,8 @@ from .querys import asociar_etiquetas
 from .tasks import convertir_video_a_hls
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
-from .utils import generar_urls_firmadas_para_stream
+from .utils import generar_urls_firmadas_para_stream, optimizar_imagen
+from django.db import transaction
 
 from django.views.decorators.csrf import csrf_exempt #para pruebas
 
@@ -19,66 +21,85 @@ def form_video(request):
     form = VideoUploadForm()
     return render(request, 'video.html', {'form': form})
 
+@transaction.atomic
 def subir_video(request):
-    """
-    1. Recibe el formulario con archivo de video, miniatura y metadatos.
-    2. Guarda los archivos en MEDIA_ROOT/videos/  y MEDIA_ROOT/imagenes/
-    3. Crea el registro en la BD (incluye 'publico' según visibilidad elegida).
-    4. Lanza la tarea Celery para convertir a HLS.
-    5. Redirige a /videos/subida/<id>  para la fase de subida a S3.
-    """
-    if request.method == 'POST':
-        form = VideoUploadForm(request.POST, request.FILES)
-        if form.is_valid():
+    if request.method != 'POST':
+        return redirect('/videos/upload')
 
-            # ---------- 1.  VIDEO ----------
-            video_file     = form.cleaned_data['file']
-            video_filename = video_file.name
-            video_path_db  = os.path.join('videos', video_filename)  # se guarda en la BD
-            video_path_fs  = os.path.join(settings.MEDIA_ROOT, video_path_db)
+    form = VideoUploadForm(request.POST, request.FILES)
+    if not form.is_valid():
+        return redirect('/videos/upload')
 
-            with open(video_path_fs, 'wb+') as dest:
-                for chunk in video_file.chunks():
-                    dest.write(chunk)
+    # 1 ─── Guardar video en rutas TEMPORALES ─────────────────────────
+    video_file     = form.cleaned_data['file']
+    tmp_video_name = video_file.name
+    tmp_video_path = os.path.join(settings.MEDIA_ROOT, 'tmp', tmp_video_name)
 
-            # ---------- 2.  MINIATURA (opcional) ----------
-            thumbnail      = form.cleaned_data.get('thumbnail')
-            thumbnail_path_db = None
-            if thumbnail:
-                thumb_filename   = thumbnail.name
-                thumbnail_path_db = os.path.join('imagenes', thumb_filename)
-                thumb_path_fs    = os.path.join(settings.MEDIA_ROOT, thumbnail_path_db)
-                with open(thumb_path_fs, 'wb+') as dest:
-                    for chunk in thumbnail.chunks():
-                        dest.write(chunk)
+    os.makedirs(os.path.dirname(tmp_video_path), exist_ok=True)
+    with open(tmp_video_path, 'wb+') as dest:
+        for chunk in video_file.chunks():
+            dest.write(chunk)
 
-            # ---------- 3.  VISIBILIDAD ----------
-            es_publico = form.cleaned_data['visibility'] == 'public'
+    thumbnail = form.cleaned_data.get('thumbnail')
 
-            # ---------- 4.  CREAR REGISTRO ----------
-            # (Temporal) canal fijo hasta tener autenticación
-            canal = Canales.objects.get(id_canal=1)
+    # 2 ─── Crear registro con link vacío para obtener id ──────────────
+    canal       = Canales.objects.get(id_canal=1)      # temporal
+    es_publico  = form.cleaned_data['visibility'] == 'public'
 
-            video = Videos.objects.create(
-                link        = video_path_db,                  # ruta relativa
-                titulo      = form.cleaned_data['title'],
-                descripcion = form.cleaned_data['description'],
-                miniatura   = thumbnail_path_db,
-                publico     = es_publico,
-                id_canal    = canal
-            )
+    video = Videos.objects.create(
+        link      = '',
+        miniatura = '',
+        titulo    = form.cleaned_data['title'],
+        descripcion = form.cleaned_data['description'],
+        publico   = es_publico,
+        id_canal  = canal
+    )
 
-            # ---------- 5.  CONVERTIR A HLS EN SEGUNDO PLANO ----------
-            convertir_video_a_hls.delay(video.id_video, video_path_fs)
+    # 3 ─── Construir rutas DEFINITIVAS usando id_video ────────────────
+    vid_dir = f"videos/video{video.id_video}"
+    os.makedirs(os.path.join(settings.MEDIA_ROOT, vid_dir), exist_ok=True)
 
-            # ---------- 6.  ETIQUETAS ----------
-            asociar_etiquetas(video, form.cleaned_data['tags'])
+    final_video_rel = f"{vid_dir}/index.m3u8"
+    final_video_fs  = os.path.join(settings.MEDIA_ROOT, final_video_rel)
 
-            # ---------- 7.  REDIRECCIÓN A PÁGINA DE SUBIDA ----------
-            return redirect(f'/videos/subida/{video.id_video}')
+    # mueve el mp4 temporal al lugar donde FFmpeg lo leerá
+    final_src_mp4    = f"{vid_dir}/original.mp4"
+    final_src_mp4_fs = os.path.join(settings.MEDIA_ROOT, final_src_mp4)
+    os.rename(tmp_video_path, final_src_mp4_fs)
 
-    # Si no es POST o el form no es válido, vuelve al formulario
-    return redirect('/videos/upload')
+    # 4 ─── Procesar miniatura (si se subió) ───────────────────────────
+    final_thumb_rel = None
+    if thumbnail:
+        final_thumb_rel = f"{vid_dir}/miniatura.jpg"    # <-- esta ruta relativa es para la base de datos
+
+        # Primero guardamos en videos/video{id}/miniatura.jpg
+        final_thumb_fs = os.path.join(settings.MEDIA_ROOT, final_thumb_rel)
+        miniatura_base64 = optimizar_imagen(thumbnail)
+
+        from base64 import b64decode
+        with open(final_thumb_fs, 'wb') as f:
+            f.write(b64decode(miniatura_base64))
+
+        # Luego copiamos también a stream/{id}/miniatura.jpg
+        final_thumb_stream_fs = os.path.join(settings.MEDIA_ROOT, 'stream', str(video.id_video), 'miniatura.jpg')
+        os.makedirs(os.path.dirname(final_thumb_stream_fs), exist_ok=True)
+
+        # Copia desde videos/video{id}/miniatura.jpg hacia stream/{id}/miniatura.jpg
+        shutil.copyfile(final_thumb_fs, final_thumb_stream_fs)
+
+    # 5 ─── Actualizar registro y lanzar Celery ───────────────────────
+    video.link      = final_video_rel
+    video.miniatura = final_thumb_rel
+    video.save(update_fields=['link', 'miniatura'])
+
+    convertir_video_a_hls.delay(video.id_video, final_src_mp4_fs)
+
+    # etiquetas
+    asociar_etiquetas(video, form.cleaned_data['tags'])
+
+    return redirect(f'/videos/subida/{video.id_video}')
+
+
 
 #Vista que devuelve si el video ya esta listo para subirse
 def video_estado(request, video_id):
@@ -120,13 +141,21 @@ def confirmar_subida(request, video_id):
 @require_POST
 def video_nube(request, video_id):
     """
-    Marca el vídeo como ‘subido a la nube’ (estado=True) cuando
-    el frontend acaba de transferir todos los fragmentos a S3.
+    Frontend avisa que todos los fragmentos ya están en S3:
+    • marca estado=True (listo para revisión)
+    • elimina la carpeta local media/stream/<id_video>/
     """
     try:
         video = Videos.objects.get(id_video=video_id)
-        video.estado = True          # listo para revisión del admin
+        video.estado = True
         video.save(update_fields=['estado'])
+
+        #Eliminamos archivos temporales.
+        dir_to_delete = os.path.join(settings.MEDIA_ROOT, 'stream', str(video_id))
+        shutil.rmtree(dir_to_delete, ignore_errors=True)   # borra todo el árbol
+        dir_to_delete = os.path.join(settings.MEDIA_ROOT, 'videos', f'video{video_id}')
+        shutil.rmtree(dir_to_delete, ignore_errors=True) 
+
         return JsonResponse({'ok': True})
     except Videos.DoesNotExist:
         return JsonResponse({'ok': False, 'error': 'Video no existe'}, status=404)
