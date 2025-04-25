@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="img/icon.png">
+  <title>Flixy</title>
+  <link rel="stylesheet" href="{% static 'usuarios/css/inicio.css' %}">
+</head>
+<body>
+
+  <!-- Barra superior -->
+
+  <header class="header">
+    <div class="logo">Flixy</div>
+    <div class="search-bar">
+      <input type="text" placeholder="Buscar videos...">
+      <button>Buscar</button>
+    </div>
+    <div class="user-actions">
+      <div class="top-bar">
+        <img src="img/subir.png" alt="Perfil">
+      </div>
+        <div class="top-bar">
+          <a href="notis.html">
+            <img src="img/notis.png" alt="Perfil">
+          </a>
+        </div>
+      <div class="top-bar">
+        <a href="perfil.html">
+          <img src="img/perfil.png" alt="Perfil">
+       </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Menú lateral -->
+
+  <aside class="sidebar">
+    <nav>
+      <ul>
+        <li><a href="inicio.html">Inicio</a></li>
+        <li><a href="subs.html ">Suscripciones</a></li>
+        <li><a href="#">Biblioteca</a></li>
+        <li><a href="historial.html">Historial</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Área principal  -->
+
+  <main class="content">
+    <section class="video-grid">
+      <div class="video-card">
+        <a href="pagvideo.html"><img src="img/cloud.png" alt="Video 1"></a>
+        <h3>Cloud Development</h3>
+        <p>CodingCloud • 100k vistas • Hace 2 días</p>
+      </div>
+      <div class="video-card">
+        <a href="pagvideo.html"><img src="img/backed.jpg" alt="Video 2"></a>
+        <h3>Backend Development</h3>
+        <p>BackCoding • 50k vistas • Hace 1 semana</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2025 Flixy. Todos los derechos reservados.</p>
+  </footer>
+
+</body>
+</html>

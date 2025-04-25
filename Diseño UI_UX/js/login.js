@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   loginForm.addEventListener('submit', function(e) {
-    e.preventDefault();
     
     const email = document.getElementById('email').value.trim();
     const password = passwordInput.value.trim();
@@ -38,7 +37,6 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    simulateLogin(email, password);
   });
 
   const inputs = document.querySelectorAll('input');
@@ -66,11 +64,4 @@ document.addEventListener('DOMContentLoaded', function() {
     alert(message); 
   }
 
-  function simulateLogin(email, password) {
-    console.log('Simulando login con:', { email, password });
-
-    setTimeout(() => {
-      alert('Inicio de sesión exitoso (simulado)');
-    }, 1500);
-  }
 });

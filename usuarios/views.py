@@ -1,6 +1,45 @@
 from django.shortcuts import render, redirect
-from .models import Usuarios, Roles
+from usuarios.models import Usuarios, Roles
 from datetime import datetime
+import jwt
+from django.conf import settings
+
+
+def inicio(request):
+    return render(request, 'inicio.html')
+
+def login(request):
+    if request.method == 'POST':
+        correo = request.POST['correo']
+        contra = request.POST['contra']
+
+        try:
+            usuario = Usuarios.objects.get(correo=correo, contra=contra)
+
+            # Crear token JWT
+            payload = {
+                'id_usuario': usuario.id_usuario,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1),  # expira en 1 hora
+                'iat': datetime.datetime.utcnow()
+            }
+            token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+
+            # Crear respuesta y guardar el token en una cookie segura
+            response = redirect('inicio')
+            response.set_cookie(
+                key='jwt',
+                value=token,
+                httponly=True,  # Importante para que el token no sea accesible desde JavaScript
+                max_age=3600
+            )
+
+            return response
+
+        except Usuarios.DoesNotExist:
+            return render(request, 'login.html', {'error': 'Credenciales inválidas'})
+
+    return render(request, 'login.html')
+
 
 def registrar_usuario(request):
     if request.method == 'POST':
@@ -22,28 +61,28 @@ def registrar_usuario(request):
             hoy = datetime.today()
             edad = hoy.year - fecha_nacimiento.year - ((hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
             if edad < 13:
-                return render(request, 'login.html')
+                return render(request, 'registro.html')
         except ValueError:
-            return render(request, 'login.html')
+            return render(request, 'registro.html')
 
         # Verificación de contraseña
         if contra != confirmar_contra:
-            return render(request, 'login.html')
+            return render(request, 'registro.html')
 
         if not terminos:
-            return render(request, 'login.html')
+            return render(request, 'registro.html')
 
         # Verifica si el correo ya existe
         if Usuarios.objects.filter(correo=correo).exists():
-            return render(request, 'login.html')
+            return render(request, 'registro.html')
 
         # Obtener el rol "Usuario"
         try:
             rol = Roles.objects.get(rol='Usuario')
         except Roles.DoesNotExist:
-            return render(request, 'login.html')
+            return render(request, 'registro.html')
 
-        # Guardar el usuario
+        # Guardar el usuario y canal
         nuevo_usuario = Usuarios(
             nombre_canal=nombre_canal,
             nombre=nombre,
@@ -51,13 +90,21 @@ def registrar_usuario(request):
             a_mat=a_mat,
             nacimiento=nacimiento,
             correo=correo,
-            contra=contra,  # en producción deberías encriptarla
+            contra=contra, 
             foto_perfil=foto_perfil.name if foto_perfil else None,
             id_rol=rol
         )
+
         nuevo_usuario.save()
 
-        return redirect('login')  # Cambia 'login' por la vista a la que quieras redirigir
+        nuevo_canal = Canales(
+            nombre = nombre_canal,
+            id_usuario = nuevo_usuario
+        )
+        
+        nuevo_canal.save()
 
-    return render(request, 'login.html')
+        return redirect('registrar_usuario') 
+
+    return render(request, 'registro.html')
 
