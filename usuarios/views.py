@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
-from usuarios.models import Usuarios, Roles
-from datetime import datetime
+from usuarios.models import Usuarios, Roles, Canales
+import datetime
 import jwt
 from django.conf import settings
 
@@ -19,8 +19,8 @@ def login(request):
             # Crear token JWT
             payload = {
                 'id_usuario': usuario.id_usuario,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1),  # expira en 1 hora
-                'iat': datetime.datetime.utcnow()
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1),  # expira en 1 hora
+                'iat': datetime.datetime.now(datetime.timezone.utc)
             }
             token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
@@ -57,8 +57,8 @@ def registrar_usuario(request):
 
         # Validación de edad mínima (13 años)
         try:
-            fecha_nacimiento = datetime.strptime(nacimiento, '%Y-%m-%d')
-            hoy = datetime.today()
+            fecha_nacimiento = datetime.datetime.strptime(nacimiento, '%Y-%m-%d')
+            hoy = datetime.datetime.today()
             edad = hoy.year - fecha_nacimiento.year - ((hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
             if edad < 13:
                 return render(request, 'registro.html')
@@ -68,6 +68,7 @@ def registrar_usuario(request):
         # Verificación de contraseña
         if contra != confirmar_contra:
             return render(request, 'registro.html')
+        print('validacion hecha contra')
 
         if not terminos:
             return render(request, 'registro.html')
@@ -75,16 +76,17 @@ def registrar_usuario(request):
         # Verifica si el correo ya existe
         if Usuarios.objects.filter(correo=correo).exists():
             return render(request, 'registro.html')
+        print('valida correo')
 
         # Obtener el rol "Usuario"
         try:
-            rol = Roles.objects.get(rol='Usuario')
+            rol = Roles.objects.get(id_rol=2)
         except Roles.DoesNotExist:
             return render(request, 'registro.html')
+        
 
         # Guardar el usuario y canal
         nuevo_usuario = Usuarios(
-            nombre_canal=nombre_canal,
             nombre=nombre,
             a_pat=a_pat,
             a_mat=a_mat,
@@ -96,15 +98,23 @@ def registrar_usuario(request):
         )
 
         nuevo_usuario.save()
-
+        
         nuevo_canal = Canales(
-            nombre = nombre_canal,
+            nombre_canal = nombre_canal,
             id_usuario = nuevo_usuario
         )
         
+        print(f"Datos recibidos: {nuevo_usuario.nombre}, {nuevo_canal.nombre_canal}, {correo}")
         nuevo_canal.save()
 
         return redirect('registrar_usuario') 
 
     return render(request, 'registro.html')
+
+def logout(request):
+    response = redirect('login')  # Redirige al login
+    response.delete_cookie('jwt')  # Borra la cookie del token JWT
+    return response
+
+
 
