@@ -27,6 +27,9 @@ class Videos(models.Model):
     miniatura = models.CharField(max_length=64, blank=True, null=True)
     id_canal = models.ForeignKey('canales.Canales', on_delete=models.CASCADE, db_column='id_canal')
 
+    def __str__(self):
+        return f"{self.id_video}|{self.link}|{self.calificacion}|{self.titulo}|{self.descripcion}|{self.estado}|{self.revisado}|{self.publico}|{self.fecha_publicado}|{self.miniatura}|{self.id_canal.id_canal}"
+
     class Meta:
         managed = False
         db_table = 'videos'
