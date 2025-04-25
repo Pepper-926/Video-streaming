@@ -43,6 +43,7 @@ CREATE TABLE Videos (
     calificacion NUMERIC(2,1) CHECK (calificacion >= 0 AND calificacion <= 5),
     titulo VARCHAR(30) NOT NULL,
     descripcion TEXT,
+    conversion_completa BOOLEAN NOT NULL DEFAULT FALSE,
     estado BOOLEAN NOT NULL DEFAULT FALSE,
     revisado BOOLEAN NOT NULL DEFAULT FALSE,
     publico BOOLEAN NOT NULL DEFAULT FALSE,

@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Subiendo tu video…</title>
+    <!-- Script principal -->
+    <script type="module" src="{% static 'videos/js/subida_s3.js' %}"></script>
+    <!-- Script para lanzar la subida con el id renderizado -->
+    <script type="module">
+      import { iniciarSubida } from "{% static 'videos/js/subida_s3.js' %}";
+      window.addEventListener('DOMContentLoaded', () => {
+        const videoId = {{ video_id }};   /* ← renderizado desde la vista */
+        iniciarSubida(videoId);
+      });
+    </script>
+</head>
+<body>
+  <h2>⏳ Procesando y subiendo tu video…</h2>
+  <p id="progreso">Preparando fragmentos HLS…</p>
+  <p id="estado"></p>
+
+  <div id="finalizado" style="display:none; margin-top:20px;">
+    <a href="/" style="
+        padding:10px 20px; background:#28a745; color:#fff;
+        text-decoration:none; border-radius:5px;">
+      Ir al inicio
+    </a>
+  </div>
+</body>
+</html>

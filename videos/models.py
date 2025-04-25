@@ -20,6 +20,7 @@ class Videos(models.Model):
     calificacion = models.DecimalField(max_digits=2, decimal_places=1, blank=True, null=True)
     titulo = models.CharField(max_length=30)
     descripcion = models.TextField(blank=True, null=True)
+    conversion_completa = models.BooleanField(default=False)
     estado = models.BooleanField(default=False)
     revisado = models.BooleanField(default=False)
     publico = models.BooleanField(default=False)
