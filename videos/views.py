@@ -5,7 +5,7 @@ from canales.models import Canales
 from .forms import VideoUploadForm #Obtener form que se devuelve al cliente
 from django.conf import settings #Para obtener el MEDIA_PATH
 from .querys import asociar_etiquetas
-from .utils import convertir_a_hls
+from .tasks import convertir_video_a_hls
 
 def index(request):
     return render(request, 'inicio.html')
@@ -34,7 +34,7 @@ def subir_video(request):
                     for chunk in thumbnail.chunks():
                         destination.write(chunk)
 
-            # ⚠️ Temporal: usar canal 1 mientras no exista app de usuarios
+            #Temporal: usar canal 1 mientras no exista app de usuarios. Cuando funcionen las sesion hay que obtener el id del canal
             video = Videos.objects.create(
                 link=video_path,
                 titulo=form.cleaned_data['title'],
@@ -46,7 +46,7 @@ def subir_video(request):
             # Carpeta de salida: media/stream/{video.id}
             carpeta_salida = os.path.join(settings.MEDIA_ROOT, 'stream', str(video.id_video))
 
-            convertir_a_hls(video_path, carpeta_salida)
+            convertir_video_a_hls.delay(video.id, video_path)
 
             # Procesar etiquetas (checkboxes seleccionados)
             etiquetas_seleccionadas = form.cleaned_data['tags']

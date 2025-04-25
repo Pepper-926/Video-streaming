@@ -1,7 +1,7 @@
-#Modulo de python para manejar el formateo de los videos a HLS y subirlo a la nube
-import os
+#Modulo de python para manejar la nube
+
 import subprocess
-from pathlib import Path
+import os
 
 def convertir_a_hls(input_path, output_dir):
     os.makedirs(output_dir, exist_ok=True)
