@@ -40,7 +40,7 @@
     margin: 1rem;
   }
   
-
+  /* Logo */
   .logo {
     text-align: center;
     margin-bottom: 2rem;
@@ -63,6 +63,7 @@
     font-size: 0.9rem;
   }
   
+  /* Foto de perfil */
   .profile-picture-section {
     display: flex;
     flex-direction: column;
@@ -131,13 +132,15 @@
     height: 100%;
     cursor: pointer;
   }
-
+  
+  /* Formulario */
   .auth-form {
     display: flex;
     flex-direction: column;
     gap: 1.2rem;
   }
- 
+  
+  /* Grupos de formulario */
   .form-group {
     display: flex;
     flex-direction: column;
@@ -181,7 +184,8 @@
     outline: none;
     border-color: var(--primary-color);
   }
-
+  
+  /* Estilos específicos para el campo de fecha */
   input[type="date"] {
     appearance: none;
     -webkit-appearance: none;
@@ -199,6 +203,7 @@
     font-style: italic;
   }
   
+  /* Mostrar contraseña */
   .show-password {
     position: absolute;
     right: 15px;
@@ -213,6 +218,7 @@
     color: var(--light-text);
   }
   
+  /* Fuerza de contraseña */
   .password-strength {
     display: flex;
     align-items: center;
