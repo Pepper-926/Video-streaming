@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flixy - Subir Video</title>
+    <link rel="stylesheet" href="{% static 'videos/css/video.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'videos/img/icon.png' %}">
+</head>
+<body>
+    <header class="header">
+        <div class="logo">Flixy</div>
+    </header>
+
+    <aside class="sidebar">
+        <ul>
+            <li><a href="/">Inicio</a></li>
+            <li><a href="historial.html">Historial</a></li>
+        </ul>
+    </aside>
+
+    <main class="upload-content">
+        <div class="upload-container">
+            <h1>Subir Video a Flixy</h1>
+            <form class="upload-form" method="POST" action="/videos/" enctype="multipart/form-data">
+                {% csrf_token %}
+    
+                <div class="form-group">
+                    <label for="title">Título del Video</label>
+                    {{ form.title }}
+                </div>
+    
+                <div class="form-group">
+                    <label for="description">Descripción</label>
+                    {{ form.description }}
+                </div>
+    
+                <div class="form-group">
+                    <label for="video-file">Archivo de Video</label>
+                    {{ form.file }}
+                </div>
+    
+                <div class="form-group">
+                    <label for="thumbnail">Miniatura (opcional)</label>
+                    {{ form.thumbnail }}
+                </div>
+    
+                <div class="form-group">
+                    <label for="visibility">Visibilidad</label>
+                    {{ form.visibility }}
+                </div>
+    
+                <div class="form-group">
+                    <label for="tags">Etiquetas</label>
+                    <!-- Botón que abre el modal -->
+                    <button type="button" class="select-tags-btn" onclick="toggleModal()">Seleccionar</button>
+
+                    <!-- Resumen de etiquetas seleccionadas -->
+                    <div id="selected-tags-preview" class="tags-preview"></div>
+    
+                    <!-- Modal con checkboxes -->
+                    <div id="tagModal" class="modal">
+                        <div class="modal-content">
+                            <span class="close-btn" onclick="toggleModal()">&times;</span>
+                            <h3>Selecciona las etiquetas</h3>
+                            <div class="checkbox-group">
+                                {% for checkbox in form.tags %}
+                                    <label class="checkbox-label">
+                                        {{ checkbox.tag }} {{ checkbox.choice_label }}
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    
+                <button type="submit" class="submit-btn">Subir Video</button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2023 Flixy - Todos los derechos reservados</p>
+    </footer>
+    <script src="{% static 'videos/js/video.js' %}"></script>
+</body>
+</html>

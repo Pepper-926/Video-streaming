@@ -1,6 +1,6 @@
 CREATE TABLE Roles (
     id_rol INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    rol VARCHAR(10)  UNIQUE NOT NULL
+    rol VARCHAR(10) UNIQUE NOT NULL
 );
 
 CREATE TABLE Usuarios (
@@ -11,14 +11,22 @@ CREATE TABLE Usuarios (
     nacimiento DATE NOT NULL,
     correo VARCHAR(50) UNIQUE NOT NULL,
     contra VARCHAR(64) NOT NULL,
+    foto_perfil VARCHAR(64),
     id_rol INT NOT NULL,
     CONSTRAINT fk_usuarios_rol FOREIGN KEY (id_rol) REFERENCES Roles(id_rol) ON DELETE CASCADE
+);
+
+CREATE TABLE Seguidores (
+    id_usuario INT NOT NULL,
+    seguidor INT NOT NULL,
+    PRIMARY KEY(id_usuario, seguidor),
+    CONSTRAINT fk_usuario_seguidor FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
+    CONSTRAINT fk_seguidor_usuario FOREIGN KEY (seguidor) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE Canales (
     id_canal INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nombre VARCHAR(30) UNIQUE NOT NULL,
-    subscriptores INT NOT NULL DEFAULT 0 CHECK (subscriptores >= 0),
     id_usuario INT NOT NULL,
     CONSTRAINT fk_canales_usuario FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
 );
@@ -34,10 +42,13 @@ CREATE TABLE Videos (
     link VARCHAR(128) NOT NULL,
     calificacion NUMERIC(2,1) CHECK (calificacion >= 0 AND calificacion <= 5),
     titulo VARCHAR(30) NOT NULL,
-    descripcion TEXT,  
+    descripcion TEXT,
+    conversion_completa BOOLEAN NOT NULL DEFAULT FALSE,
+    estado BOOLEAN NOT NULL DEFAULT FALSE,
     revisado BOOLEAN NOT NULL DEFAULT FALSE,
     publico BOOLEAN NOT NULL DEFAULT FALSE,
     fecha_publicado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    miniatura VARCHAR(64),
     id_canal INT NOT NULL,
     CONSTRAINT fk_videos_canal FOREIGN KEY (id_canal) REFERENCES Canales(id_canal) ON DELETE CASCADE
 );
@@ -53,7 +64,7 @@ CREATE TABLE Videos_Etiquetas (
 CREATE TABLE Likes_Dislikes_Videos (
     id_usuario INT NOT NULL,
     id_video INT NOT NULL,
-    tipo_reaccion BOOLEAN NOT NULL, -- TRUE para like, FALSE para dislike
+    tipo_reaccion BOOLEAN NOT NULL,
     fecha_reaccion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_usuario, id_video),
     CONSTRAINT fk_likes_dislikes_usuario FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
@@ -79,5 +90,5 @@ CREATE TABLE Historial (
     fecha_visto TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_usuario, id_video, fecha_visto),
     CONSTRAINT fk_historial_usuario FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
-    CONSTRAINT fk_historial_video FOREIGN KEY (id_video)  REFERENCES Videos(id_video) ON DELETE CASCADE
+    CONSTRAINT fk_historial_video FOREIGN KEY (id_video) REFERENCES Videos(id_video) ON DELETE CASCADE
 );

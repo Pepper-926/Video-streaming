@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reproductor de Video | Flixy</title>
+  <link rel="stylesheet" href="css/pagvideo.css">
+  <link rel="icon" type="image/x-icon" href="img/icon.png">
+</head>
+<body>
+
+  <header class="video-header">
+    <div class="header-container">
+      <div class="logo"><a href="inicio.html">Flixy</div>
+      
+      <div class="search-bar">
+        <input type="text" placeholder="Buscar videos...">
+        <button><i class="fas fa-search"></i>Buscar</button>
+      </div>
+    
+        <div class="top-bar">
+          <a href="perfil.html">
+            <img src="img/perfil.png" alt="Perfil">
+         </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+  <main class="video-main">
+
+    <section class="video-player-section">
+      <div class="video-container">
+        <video controls poster="img/video-thumbnail.jpg">
+          <source src="video/sample.mp4" type="video/mp4">
+        </video>
+  
+        <div class="custom-controls">
+          <button class="play-pause"><i class="fas fa-play"></i></button>
+          <div class="progress-bar">
+            <div class="progress"></div>
+          </div>
+          <div class="time">00:00 / 00:00</div>
+          <button class="fullscreen"><i class="fas fa-expand"></i></button>
+        </div>
+      </div>
+
+      <div class="video-info">
+        <h1 class="video-title">Cómo crear un diseño profesional con CSS</h1>
+        <div class="video-meta">
+          <span class="views">1.2M vistas</span>
+          <span class="date">Publicado hace 2 semanas</span>
+          <div class="actions">
+            <button class="like-btn"><i class="fas fa-thumbs-up"></i> 25K</button>
+            <button class="share-btn"><i class="fas fa-share"></i> Compartir</button>
+            <button class="save-btn"><i class="fas fa-bookmark"></i> Guardar</button>
+          </div>
+        </div>
+
+        <div class="video-description">
+          <div class="channel-info">
+            <img src="img/channel-pic.jpg" alt="Canal" class="channel-img">
+            <div>
+              <h3 class="channel-name">Diseño Web Pro</h3>
+              <p class="subscribers">150K suscriptores</p>
+            </div>
+            <button class="subscribe-btn">Suscribirse</button>
+          </div>
+          <p class="description-text">En este tutorial aprenderás técnicas avanzadas de CSS para crear diseños profesionales. Incluye Flexbox, Grid, animaciones y efectos modernos que harán que tus proyectos destaquen.</p>
+        </div>
+      </div>
+      
+      <section class="comments-section">
+        <h2><i class="fas fa-comments"></i> 1,248 Comentarios</h2>
+        <div class="add-comment">
+          <img src="img/profile-pic.jpg" alt="Usuario" class="user-img">
+          <input type="text" placeholder="Añade un comentario público...">
+        </div>
+
+        <div class="comments-list">
+          <div class="comment">
+            <img src="img/user1.jpg" alt="Usuario" class="user-img">
+            <div class="comment-content">
+              <h3>Juan Pérez <span>hace 3 días</span></h3>
+              <p>Excelente tutorial! Justo lo que necesitaba para mejorar mis diseños. ¿Harás uno sobre animaciones CSS?</p>
+              <div class="comment-actions">
+                <button><i class="fas fa-thumbs-up"></i> 245</button>
+                <button><i class="fas fa-thumbs-down"></i></button>
+                <button>Responder</button>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </section>
+    </section>
+    
+    <aside class="recommended-videos">
+      <h2>Recomendados</h2>
+      
+      <div class="recommended-item">
+        <div class="thumbnail">
+          <img src="img/thumb1.jpg" alt="Video recomendado">
+          <span class="duration">12:45</span>
+        </div>
+        <div class="video-details">
+          <h3>Diseño responsivo en 2023</h3>
+          <p>Web Design</p>
+          <p>450K vistas • hace 1 mes</p>
+        </div>
+      </div>
+      
+    </aside>
+  </main>
+
+  <script src="js/video-player.js"></script>
+</body>
+</html>
