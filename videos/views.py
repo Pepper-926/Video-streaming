@@ -1,8 +1,9 @@
 import os #Para trabajar con paths y nombres de archivos
 import shutil #Para eliminar directorios completos
 from django.shortcuts import render, redirect
-from .models import Videos, VideosEtiquetas, Etiquetas
+from .models import Videos
 from usuarios.models import Canales
+from usuarios.decoradores import verificar_token
 from .forms import VideoUploadForm #Obtener form que se devuelve al cliente
 from django.conf import settings #Para obtener el MEDIA_PATH
 from .querys import asociar_etiquetas
@@ -17,12 +18,14 @@ from django.views.decorators.csrf import csrf_exempt #para pruebas
 def index(request):
     return render(request, 'inicio.html')
 
-def form_video(request):
+@verificar_token
+def form_video(request, usuario):
     form = VideoUploadForm()
     return render(request, 'video.html', {'form': form})
 
+@verificar_token
 @transaction.atomic
-def subir_video(request):
+def subir_video(request, usuario):
     if request.method != 'POST':
         return redirect('/videos/upload')
 
@@ -43,7 +46,7 @@ def subir_video(request):
     thumbnail = form.cleaned_data.get('thumbnail')
 
     # 2 ─── Crear registro con link vacío para obtener id ──────────────
-    canal       = Canales.objects.get(id_canal=1)      # temporal
+    canal = Canales.objects.get(id_usuario=usuario)
     es_publico  = form.cleaned_data['visibility'] == 'public'
 
     video = Videos.objects.create(
@@ -102,7 +105,8 @@ def subir_video(request):
 
 
 #Vista que devuelve si el video ya esta listo para subirse
-def video_estado(request, video_id):
+@verificar_token
+def video_estado(request, usuario, video_id):
     if False:#not request.user.is_authenticated:  Esto hay que quitarlo una vez que ya se puedan manejar sesiones
         return redirect('/registrar')
     
@@ -115,10 +119,10 @@ def video_estado(request, video_id):
         return JsonResponse({'error': str(e)}, status=500)
     
 
-#vista que genera los urls firmados para que el cliente suba el video 
-@csrf_exempt
+#vista que genera los urls firmados para que el cliente suba el video
+@verificar_token
 @require_GET
-def obtener_urls_s3(request, video_id): 
+def obtener_urls_s3(request, usuario, video_id): 
     if False:#not request.user.is_authenticated:  Esto hay que quitarlo una vez que ya se puedan manejar sesiones
         return JsonResponse({'error': 'No autorizado'}, status=403)
 
@@ -131,15 +135,13 @@ def obtener_urls_s3(request, video_id):
         return JsonResponse({'error': str(e)}, status=500)
     
 #View donde el usuario sube el video.
-def confirmar_subida(request, video_id):
-    if False:#not request.user.is_authenticated:
-        return redirect('/registrar')
-
+@verificar_token
+def confirmar_subida(request, usuario, video_id):
     return render(request, 'video_subida.html', {'video_id': video_id})
 
-
+@verificar_token
 @require_POST
-def video_nube(request, video_id):
+def video_nube(request, usuario, video_id):
     """
     Frontend avisa que todos los fragmentos ya están en S3:
     • marca estado=True (listo para revisión)
