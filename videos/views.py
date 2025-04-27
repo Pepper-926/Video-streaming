@@ -2,7 +2,7 @@ import os #Para trabajar con paths y nombres de archivos
 import shutil #Para eliminar directorios completos
 from django.shortcuts import render, redirect
 from .models import Videos, VideosEtiquetas, Etiquetas
-from canales.models import Canales
+from usuarios.models import Canales
 from .forms import VideoUploadForm #Obtener form que se devuelve al cliente
 from django.conf import settings #Para obtener el MEDIA_PATH
 from .querys import asociar_etiquetas

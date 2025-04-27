@@ -24,9 +24,9 @@ class Videos(models.Model):
     estado = models.BooleanField(default=False)
     revisado = models.BooleanField(default=False)
     publico = models.BooleanField(default=False)
-    fecha_publicado = models.DateTimeField(blank=True, null=True)
+    fecha_publicado = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     miniatura = models.CharField(max_length=64, blank=True, null=True)
-    id_canal = models.ForeignKey('canales.Canales', on_delete=models.CASCADE, db_column='id_canal')
+    id_canal = models.ForeignKey('usuarios.Canales', on_delete=models.CASCADE, db_column='id_canal')
 
     def __str__(self):
         return f"{self.id_video}|{self.link}|{self.calificacion}|{self.titulo}|{self.descripcion}|{self.estado}|{self.revisado}|{self.publico}|{self.fecha_publicado}|{self.miniatura}|{self.id_canal.id_canal}"

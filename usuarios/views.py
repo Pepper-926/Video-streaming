@@ -5,9 +5,6 @@ import jwt
 from django.conf import settings
 
 
-def inicio(request):
-    return render(request, 'inicio.html')
-
 def login(request):
     if request.method == 'POST':
         correo = request.POST['correo']
@@ -25,7 +22,7 @@ def login(request):
             token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
             # Crear respuesta y guardar el token en una cookie segura
-            response = redirect('inicio')
+            response = redirect('/')
             response.set_cookie(
                 key='jwt',
                 value=token,
