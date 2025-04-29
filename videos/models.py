@@ -13,6 +13,17 @@ class Etiquetas(models.Model):
         managed = False
         db_table = 'etiquetas'
 
+#Vista que devuelve las etiquetas del video buscado
+class EtiquetasDeVideos(models.Model):
+    id = models.AutoField(primary_key=True)
+    id_video = models.IntegerField()
+    publico = models.BooleanField()
+    categoria = models.CharField(max_length=15)
+
+    class Meta:
+        managed = False
+        db_table = 'vw_videos_con_etiquetas'
+
 
 class Videos(models.Model):
     id_video = models.AutoField(primary_key=True)
