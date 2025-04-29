@@ -11,8 +11,9 @@ from .decoradores import verificar_token
 from .forms import VideoUploadForm  # Obtener form que se devuelve al cliente
 from .models import Videos, EtiquetasDeVideos
 from .querys import asociar_etiquetas
+from .services.s3_storage import S3Manager
 from .tasks import convertir_video_a_hls
-from .utils import generar_urls_firmadas_para_stream, optimizar_imagen
+from .utils import optimizar_imagen
 from usuarios.models import Canales
 from django.views.decorators.csrf import csrf_exempt #para pruebas
 
@@ -28,19 +29,23 @@ def form_video(request):
 @method_decorator(verificar_token, name='post')
 class VideosView(View):
     def get(self, request):
-        videos = Videos.objects.filter(publico=True)
-        data = [{
-            'id_video': v.id_video,
-            'titulo': v.titulo,
-            'descripcion': v.descripcion,
-            'link': v.link,
-            'miniatura': v.miniatura,
-            'etiquetas': [
-                etiqueta.categoria
-                for etiqueta in EtiquetasDeVideos.objects.filter(id_video=v.id_video)
-            ]
-        } for v in videos]
-        return JsonResponse({'videos': data}, status=200)
+        try:
+            s3 = S3Manager()
+            videos = Videos.objects.filter(publico=True)
+            data = [{
+                'id_video': v.id_video,
+                'titulo': v.titulo,
+                'descripcion': v.descripcion,
+                'link': s3.get_object(v.link, content_type='application/vnd.apple.mpegurl'),
+                'miniatura': s3.get_object(v.miniatura, content_type='image/jpeg') if v.miniatura else None,
+                'etiquetas': [
+                    etiqueta.categoria
+                    for etiqueta in EtiquetasDeVideos.objects.filter(id_video=v.id_video)
+                ]
+            } for v in videos]
+            return JsonResponse({'videos': data}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': e}, status=500)
     
     @transaction.atomic
     def post(self, request):
@@ -134,7 +139,8 @@ def video_estado(request, video_id):
 @require_GET
 def obtener_urls_s3(request, video_id):
     try:
-        urls = generar_urls_firmadas_para_stream(video_id)
+        s3 = S3Manager()
+        urls = s3.generar_urls_firmadas_para_stream(video_id)
         return JsonResponse({'archivos': urls})
     except FileNotFoundError:
         return JsonResponse({'error': 'Video aún no procesado o no existe'}, status=404)
