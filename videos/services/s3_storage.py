@@ -82,3 +82,56 @@ class S3Manager:
             ExpiresIn=expires_in
         )
         return url
+    
+    def delete_object(self, ruta_s3, content_type='application/octet-stream', expires_in=3600):
+        """
+        Elimina un objeto del bucket S3.
+
+        Args:
+            ruta_s3 (str): Ruta del objeto a eliminar (key).
+        
+        Returns:
+            dict: Respuesta de AWS S3 al intento de eliminación.
+        """
+        try:
+            response = self.s3.delete_object(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Key=ruta_s3
+            )
+            return response
+        except Exception as e:
+            return e
+        
+    def delete_folder(self, prefix):
+        """
+        Elimina todos los objetos que tengan un prefijo (simula eliminar una carpeta).
+
+        Args:
+            prefix (str): Prefijo que representa la "carpeta" a eliminar (ej. 'videos/video56/').
+        
+        Returns:
+            dict: Resultado de la operación de eliminación.
+        """
+        try:
+            # Listar objetos bajo el prefijo
+            response = self.s3.list_objects_v2(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Prefix=prefix
+            )
+            
+            # Si no hay objetos, salir
+            if 'Contents' not in response:
+                return {'message': 'No se encontraron objetos para eliminar.'}
+            
+            # Crear lista de objetos a eliminar
+            objects_to_delete = [{'Key': obj['Key']} for obj in response['Contents']]
+
+            # Eliminar objetos (máx 1000 por llamada)
+            delete_response = self.s3.delete_objects(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Delete={'Objects': objects_to_delete}
+            )
+            return delete_response
+        except Exception as e:
+            raise
+        

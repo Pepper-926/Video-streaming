@@ -2,7 +2,7 @@ import os  # Para trabajar con paths y nombres de archivos
 import shutil  # Para eliminar directorios completos
 from django.conf import settings  # Para obtener el MEDIA_PATH
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -17,6 +17,10 @@ from .utils import optimizar_imagen
 from usuarios.models import Canales
 from django.views.decorators.csrf import csrf_exempt #para pruebas
 
+
+'''
+Views que devuelven HTMLs
+'''
 def index(request):
     return render(request, 'inicio.html')
 
@@ -25,6 +29,15 @@ def form_video(request):
     form = VideoUploadForm()
     return render(request, 'video.html', {'form': form})
 
+#View donde el usuario sube el video.
+@verificar_token
+def confirmar_subida(request, video_id):
+    return render(request, 'video_subida.html', {'video_id': video_id})
+
+
+'''
+Esta es la api /videos
+'''
 #Vista de /videos
 @method_decorator(verificar_token, name='post')
 class VideosView(View):
@@ -121,6 +134,52 @@ class VideosView(View):
         asociar_etiquetas(video, form.cleaned_data['tags'])
 
         return redirect(f'/videos/subida/{video.id_video}')
+    
+'''
+Esta es la api /videos/<id>
+'''
+@method_decorator(verificar_token, name='delete')
+@method_decorator(csrf_exempt, name='dispatch')
+class VideoDetailsViews(View):
+    def get(self, request, video_id):
+        try:
+            s3 = S3Manager()
+            video = Videos.objects.get(id_video=video_id)
+            data = {
+                'id_video': video.id_video,
+                    'titulo': video.titulo,
+                    'descripcion': video.descripcion,
+                    'link': s3.get_object(video.link, content_type='application/vnd.apple.mpegurl'),
+                    'miniatura': s3.get_object(video.miniatura, content_type='image/jpeg') if video.miniatura else None,
+                    'etiquetas': [
+                        etiqueta.categoria
+                        for etiqueta in EtiquetasDeVideos.objects.filter(id_video=video.id_video)
+                    ]
+            }
+            return JsonResponse(data)            
+       
+        except Exception as e:
+           return JsonResponse({'error': str(e)})
+    
+    def delete(self, request, video_id):
+        try:
+            # Eliminar carpeta de S3
+            s3 = S3Manager()
+            s3.delete_folder(f'videos/video{video_id}/')
+
+            # Eliminar objeto en la base de datos
+            video = Videos.objects.get(id_video=video_id)
+            video.delete()
+
+            return JsonResponse({'ok': True})
+
+        except Videos.DoesNotExist:
+            raise Http404("Video no encontrado")
+
+        except Exception as e:
+            return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+
 
 #Vista que devuelve si el video ya esta listo para subirse
 @verificar_token
@@ -147,10 +206,6 @@ def obtener_urls_s3(request, video_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
     
-#View donde el usuario sube el video.
-@verificar_token
-def confirmar_subida(request, video_id):
-    return render(request, 'video_subida.html', {'video_id': video_id})
 
 @verificar_token
 @require_POST
