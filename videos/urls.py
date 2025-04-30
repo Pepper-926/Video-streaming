@@ -3,7 +3,7 @@ from . import views
 
 
 urlpatterns  = [
-    path('', views.index, name='index'),
+    path('index/', views.index, name='index'),
     path('videos/upload/', views.form_video, name='form_video'),
     path('videos/', views.subir_video, name='subir_video'),
     path('urls-s3/<int:video_id>', views.obtener_urls_s3, name='obtener_urls_s3'),

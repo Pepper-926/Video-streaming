@@ -30,7 +30,6 @@
         </div>
       </div>
 
-
       <div class="form-group">
         <label for="channel-name">Nombre del canal <span class="required">*</span></label>
         <div class="input-icon">
@@ -114,6 +113,10 @@
         <input type="checkbox" id="terms" name="terminos" required>
         <label for="terms">Acepto los <a href="#">Términos de Servicio</a> y <a href="#">Política de Privacidad</a> <span class="required">*</span></label>
       </div>
+
+      {% if error %}
+      <p class="error-message">{{ error }}</p>
+      {% endif %}
 
       <button type="submit" class="btn-primary">Crear cuenta</button>
 
