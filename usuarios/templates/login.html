@@ -61,6 +61,10 @@
         </button>
       </div>
 
+      {% if error %}
+      <p class="error-message">{{ error }}</p>
+      {% endif %}
+
       <div class="auth-footer">
         ¿No tienes cuenta? <a href="{% url 'registrar_usuario' %}">Regístrate ahora</a>
       </div>
