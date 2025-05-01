@@ -1,5 +1,33 @@
 from django.db import models
 
+'''
+Modelos de vistas
+'''
+#Vista que devuelve las etiquetas del video buscado
+class EtiquetasDeVideos(models.Model):
+    id = models.AutoField(primary_key=True)
+    id_video = models.IntegerField()
+    publico = models.BooleanField()
+    categoria = models.CharField(max_length=15)
+
+    class Meta:
+        managed = False
+        db_table = 'vw_videos_con_etiquetas'
+
+#Vista que devuelve el canal y su foto de perfil a partir de un video
+class VistaCanalDeVideo(models.Model):
+    id_video = models.IntegerField(primary_key=True)
+    publico = models.BooleanField()
+    nombre_canal = models.CharField(max_length=30)
+    foto_perfil = models.CharField(max_length=64)
+
+    class Meta:
+        managed = False
+        db_table = 'vista_canal_de_video'
+
+'''
+Modelos de tablas
+'''
 
 class Etiquetas(models.Model):
     id_etiqueta = models.AutoField(primary_key=True)
@@ -12,18 +40,6 @@ class Etiquetas(models.Model):
     class Meta:
         managed = False
         db_table = 'etiquetas'
-
-#Vista que devuelve las etiquetas del video buscado
-class EtiquetasDeVideos(models.Model):
-    id = models.AutoField(primary_key=True)
-    id_video = models.IntegerField()
-    publico = models.BooleanField()
-    categoria = models.CharField(max_length=15)
-
-    class Meta:
-        managed = False
-        db_table = 'vw_videos_con_etiquetas'
-
 
 class Videos(models.Model):
     id_video = models.AutoField(primary_key=True)
@@ -55,8 +71,6 @@ class VideosEtiquetas(models.Model):
         managed = False
         db_table = 'videos_etiquetas'
         unique_together = (('id_video', 'id_etiqueta'),)
-
-
 
 class LikesDislikesVideos(models.Model):
     id_usuario = models.ForeignKey('usuarios.Usuarios', on_delete=models.CASCADE, db_column='id_usuario')

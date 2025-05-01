@@ -77,7 +77,7 @@ class S3Manager:
             Params={
                 'Bucket': settings.AWS_STORAGE_BUCKET_NAME,
                 'Key': ruta_s3,
-                'ResponseContentType': content_type  # <- Para la descarga
+                'ResponseContentType': content_type
             },
             ExpiresIn=expires_in
         )
