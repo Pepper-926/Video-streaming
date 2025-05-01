@@ -40,6 +40,7 @@ def confirmar_subida(request, video_id):
 Esta es la api /videos
 '''
 #Vista de /videos
+@method_decorator(verificar_token, name='post')
 class VideosView(View):
     def get(self, request):
         try:
