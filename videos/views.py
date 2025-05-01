@@ -159,21 +159,28 @@ class VideoDetailsViews(View):
         try:
             s3 = S3Manager()
             video = Videos.objects.get(id_video=video_id)
+
+            # Buscar canal asociado desde la vista
+            canal_info = VistaCanalDeVideo.objects.filter(id_video=video_id).first()
+
             data = {
                 'id_video': video.id_video,
-                    'titulo': video.titulo,
-                    'descripcion': video.descripcion,
-                    'link': s3.get_object(video.link, content_type='application/vnd.apple.mpegurl'),
-                    'miniatura': s3.get_object(video.miniatura, content_type='image/jpeg') if video.miniatura else None,
-                    'etiquetas': [
-                        etiqueta.categoria
-                        for etiqueta in EtiquetasDeVideos.objects.filter(id_video=video.id_video)
-                    ]
+                'titulo': video.titulo,
+                'descripcion': video.descripcion,
+                'link': s3.get_object(video.link, content_type='application/vnd.apple.mpegurl') if video.link else None,
+                'miniatura': s3.get_object(video.miniatura, content_type='image/jpeg') if video.miniatura else None,
+                'etiquetas': [
+                    etiqueta.categoria
+                    for etiqueta in EtiquetasDeVideos.objects.filter(id_video=video.id_video)
+                ],
+                'canal': canal_info.nombre_canal if canal_info else None,
+                'foto_perfil': s3.get_object(canal_info.foto_perfil, content_type='image/jpeg') if canal_info and canal_info.foto_perfil else None
             }
-            return JsonResponse(data)            
+            return JsonResponse(data, status=200)            
        
         except Exception as e:
-           return JsonResponse({'error': str(e)})
+           return JsonResponse({'error': str(e)}, status=500)
+
     
     def delete(self, request, video_id):
         try:
