@@ -104,14 +104,15 @@ def registrar_usuario(request):
 
         token = generar_token(nuevo_usuario)
 
-        response = redirect('index')
+        response = redirect('registro')
+        '''
         response.set_cookie(
                 key='jwt',
                 value=token,
                 httponly=True,
                 max_age=3600
             )
-
+        '''
         return response
     return render(request, 'registro.html')
 

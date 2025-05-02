@@ -11,4 +11,5 @@ urlpatterns  = [
     path('videos/subida/<int:video_id>/', views.confirmar_subida, name='confirmar_subida'),
     path('videos/estado/<int:video_id>/', views.video_estado, name='video_estado'),
     path('videos/subido/<int:video_id>/', views.video_nube, name='video_nube'),
+    path('videos/ver/<int:video_id>/', views.ver_video, name='ver_video')
 ]

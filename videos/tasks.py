@@ -1,6 +1,6 @@
 #modulo para gestionar las colas del cambio de formato de los videos
 from celery import shared_task
-import os, glob, shutil
+import os, glob
 from .utils import convertir_a_hls
 from django.conf import settings
 from .models import Videos
