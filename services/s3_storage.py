@@ -134,4 +134,29 @@ class S3Manager:
             return delete_response
         except Exception as e:
             raise
-        
+    
+    def post_object(self, key, content_type='application/octet-stream', expires_in=3600):
+        """
+        Genera una URL firmada para subir un archivo a S3 usando POST.
+
+        Args:
+            key (str): La clave (ruta) del objeto en S3.
+            content_type (str): Tipo de contenido del archivo.
+            expires_in (int): Tiempo de expiración del formulario en segundos.
+
+        Returns:
+            dict: Diccionario con la URL y campos necesarios para subir mediante POST.
+        """
+        try:
+            post = self.s3.generate_presigned_post(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Key=key,
+                Fields={"Content-Type": content_type},
+                Conditions=[
+                    {"Content-Type": content_type}
+                ],
+                ExpiresIn=expires_in
+            )
+            return post
+        except Exception as e:
+            raise Exception(f"Error generando URL POST: {str(e)}")
