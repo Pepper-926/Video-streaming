@@ -97,6 +97,7 @@ CREATE TABLE Historial (
     id_usuario INT NOT NULL,
     id_video INT NOT NULL,
     fecha_visto TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    eliminado BOOLEAN DEFAULT FALSE NOT NULL,
     PRIMARY KEY (id_usuario, id_video, fecha_visto),
     CONSTRAINT fk_historial_usuario FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
     CONSTRAINT fk_historial_video FOREIGN KEY (id_video) REFERENCES Videos(id_video) ON DELETE CASCADE

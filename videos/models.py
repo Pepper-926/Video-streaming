@@ -25,6 +25,28 @@ class VistaCanalDeVideo(models.Model):
         managed = False
         db_table = 'vista_canal_de_video'
 
+#Vista usada para obtener los detalles del video para luego renderizar el html con los detalles de este
+class VwDetalleVideo(models.Model):
+    id_video = models.IntegerField(primary_key=True)
+    link = models.CharField(max_length=128)
+    calificacion = models.DecimalField(max_digits=2, decimal_places=1)
+    titulo = models.CharField(max_length=30)
+    descripcion = models.TextField()
+    publico = models.BooleanField()
+    token_acceso_privado = models.CharField()
+    fecha_publicado = models.DateTimeField()
+    miniatura = models.CharField(max_length=64)
+    nombre_canal = models.CharField(max_length=30)
+    foto_perfil = models.CharField(max_length=64)
+    seguidores = models.IntegerField()
+    me_gusta = models.IntegerField()
+    no_me_gusta = models.IntegerField()
+    reproducciones = models.IntegerField()
+
+    class Meta:
+        managed = False  # Django no gestionará la creación/modificación de esta vista
+        db_table = 'vwdetalle_video'
+
 '''
 Modelos de tablas
 '''
@@ -83,3 +105,14 @@ class LikesDislikesVideos(models.Model):
         managed = False
         db_table = 'likes_dislikes_videos'
         unique_together = (('id_usuario', 'id_video'),)
+
+class Historial(models.Model):
+    id_usuario = models.ForeignKey('usuarios.Usuarios', on_delete=models.CASCADE, db_column='id_usuario')
+    id_video = models.ForeignKey(Videos, on_delete=models.CASCADE, db_column='id_video', primary_key=True)
+    fecha_visto = models.DateTimeField(auto_now_add=True)
+    eliminado = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'historial'
+        unique_together = (('id_usuario', 'id_video', 'fecha_visto'),)
+        verbose_name_plural = 'Historial'            

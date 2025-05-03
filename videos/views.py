@@ -1,3 +1,4 @@
+import json
 import os  # Para trabajar con paths y nombres de archivos
 import shutil  # Para eliminar directorios completos
 from django.conf import settings  # Para obtener el MEDIA_PATH
@@ -8,13 +9,13 @@ from django.utils.crypto import get_random_string
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_GET, require_POST
-from .decoradores import verificar_token
+from .decoradores import verificar_token, intentar_verificar_token
 from .forms import VideoUploadForm  # Obtener form que se devuelve al cliente
-from .models import Videos, EtiquetasDeVideos, VistaCanalDeVideo
+from .models import Videos, EtiquetasDeVideos, VistaCanalDeVideo, Historial, VwDetalleVideo
 from .querys import asociar_etiquetas
-from services.s3_storage import S3Manager
 from .tasks import convertir_video_a_hls
-from .utils import optimizar_imagen
+from .utils import optimizar_imagen, strtobool
+from services.s3_storage import S3Manager
 from usuarios.models import Canales
 
 from django.views.decorators.csrf import csrf_exempt #para pruebas
@@ -36,8 +37,10 @@ def form_video(request):
 def confirmar_subida(request, video_id):
     return render(request, 'video_subida.html', {'video_id': video_id})
 
+#View para visualizar el video junto sus comentarios
+@intentar_verificar_token
 def ver_video(request, video_id):
-    video = get_object_or_404(Videos, id_video=video_id)
+    video = get_object_or_404(VwDetalleVideo, id_video=video_id)
     token_privado = request.GET.get('token')
 
     # Validación de visibilidad del video
@@ -51,7 +54,18 @@ def ver_video(request, video_id):
     #         'message': 'El video no ha sido revisado por un administrador.'
     #     }, status=403)
 
+    #Aqui se hace un conteo en la tabla historial para manejar el historial de cada usuario y cuantas visualizacion tiene cada video. SOLO SE CUENTA SI EL USUARIO ESTA AUTENTICADO
+
+    if request.usuario:
+        
+        historial = Historial.objects.create(
+            id_usuario = request.usuario,
+            id_video = Videos.objects.get(id_video=video_id)
+        )
+
     return render(request, 'pagvideo.html', {'video': video})
+
+
 
 
 '''
@@ -177,6 +191,7 @@ class VideosView(View):
 Esta es la api /videos/<id>
 '''
 @method_decorator(verificar_token, name='delete')
+@method_decorator(verificar_token, name='put')
 @method_decorator(csrf_exempt, name='dispatch')
 class VideoDetailsViews(View):
     def get(self, request, video_id):
@@ -223,6 +238,41 @@ class VideoDetailsViews(View):
 
         except Exception as e:
             return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+    def put(self, request, video_id):
+        try:
+            video = Videos.objects.get(id_video=video_id)
+
+            # Parsear el body del request (asumiendo que es JSON)
+            body = json.loads(request.body)
+
+            calificacion = body.get('calificacion')
+            titulo = body.get('titulo')
+            descripcion = body.get('descripcion')
+            revisado = body.get('revisado')
+            publico = body.get('publico')
+            miniatura = body.get('miniatura')
+            # Aún no se usa miniatura_img
+
+            if calificacion is not None:
+                video.calificacion = calificacion
+            if titulo is not None:
+                video.titulo = titulo
+            if descripcion is not None:
+                video.descripcion = descripcion
+            if revisado is not None:
+                video.revisado = bool(strtobool(str(revisado)))
+            if publico is not None:
+                video.publico = bool(strtobool(str(publico)))
+            if miniatura is not None:
+                video.miniatura = miniatura  # futura integración con S3
+
+            video.save()
+            return JsonResponse({'ok': True}, status=200)
+
+        except Exception as e:
+            return JsonResponse({'ok': False, 'message': str(e)}, status=500)
+
 
 
 
