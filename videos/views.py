@@ -16,7 +16,7 @@ from .querys import asociar_etiquetas
 from .tasks import convertir_video_a_hls
 from .utils import optimizar_imagen, strtobool
 from services.s3_storage import S3Manager
-from usuarios.models import Canales
+from usuarios.models import Canales, Roles
 
 from django.views.decorators.csrf import csrf_exempt #para pruebas
 
@@ -243,6 +243,10 @@ class VideoDetailsViews(View):
         try:
             video = Videos.objects.get(id_video=video_id)
 
+            #Verifica que el que lo quiere modificar sea el usuario duenio del video o un admin
+            if request.usuario.id_rol.rol != 'admin' and video.id_canal.id_usuario != request.usuario:
+                return JsonResponse({'ok': False, 'message': 'No tienes permiso para modificar este video'}, status=403)
+
             # Parsear el body del request (asumiendo que es JSON)
             body = json.loads(request.body)
 
@@ -261,14 +265,28 @@ class VideoDetailsViews(View):
             if descripcion is not None:
                 video.descripcion = descripcion
             if revisado is not None:
-                video.revisado = bool(strtobool(str(revisado)))
+                if request.usuario.id_rol.rol == 'admin':
+                    video.revisado = bool(strtobool(str(revisado)))
+                else:
+                    return JsonResponse({'ok':False,'message':f'Solo un administrador puede modificar el campo revisado. Tu rol es: {request.usuario.id_rol.rol}'})
             if publico is not None:
                 video.publico = bool(strtobool(str(publico)))
             if miniatura is not None:
                 video.miniatura = miniatura  # futura integración con S3
 
             video.save()
-            return JsonResponse({'ok': True}, status=200)
+            return JsonResponse({
+                'ok': True,
+                'video': {
+                    'id_video': video.id_video,
+                    'titulo': video.titulo,
+                    'descripcion': video.descripcion,
+                    'calificacion': video.calificacion,
+                    'publico': video.publico,
+                    'revisado': video.revisado,
+                    'miniatura': video.miniatura
+                }
+            }, status=200)
 
         except Exception as e:
             return JsonResponse({'ok': False, 'message': str(e)}, status=500)
