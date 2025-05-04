@@ -16,7 +16,7 @@ from .querys import asociar_etiquetas
 from .tasks import convertir_video_a_hls
 from .utils import optimizar_imagen, strtobool
 from services.s3_storage import S3Manager
-from usuarios.models import Canales, Roles
+from usuarios.models import Canales
 
 from django.views.decorators.csrf import csrf_exempt #para pruebas
 
@@ -56,12 +56,16 @@ def ver_video(request, video_id):
 
     #Aqui se hace un conteo en la tabla historial para manejar el historial de cada usuario y cuantas visualizacion tiene cada video. SOLO SE CUENTA SI EL USUARIO ESTA AUTENTICADO
 
-    if request.usuario:
+    try:
+        if request.usuario:
         
-        historial = Historial.objects.create(
-            id_usuario = request.usuario,
-            id_video = Videos.objects.get(id_video=video_id)
-        )
+            Historial.objects.create(
+                id_usuario = request.usuario,
+                id_video = Videos.objects.get(id_video=video_id)
+            )
+            
+    except Exception as e:
+        pass
 
     return render(request, 'pagvideo.html', {'video': video})
 
