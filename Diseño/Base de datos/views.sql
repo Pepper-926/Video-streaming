@@ -44,7 +44,7 @@ SELECT
 	count(h.id_usuario) as reproducciones
 FROM
 	videos v
-JOIN
+LEFT JOIN
 	historial h on v.id_video = h.id_video
 LEFT JOIN
 	likes_dislikes_videos l on v.id_video = l.id_video

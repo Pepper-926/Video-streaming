@@ -7,9 +7,9 @@
   <title>Reproductor de Video | Flixy</title>
   <link rel="icon" type="image/x-icon" href="{% static 'videos/img/icon.png' %}">
   <link rel="stylesheet" href="{% static 'videos/css/pagvideo.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
-
   <header class="video-header">
     <div class="header-container">
       <div class="logo"><a href="/">Flixy</div>
@@ -33,18 +33,9 @@
 
     <section class="video-player-section">
       <div class="video-container">
-        <video controls poster="img/video-thumbnail.jpg">
-          <source src="video/sample.mp4" type="video/mp4">
+        <video id="video-player" controls {% if miniatura %}poster="{{ miniatura }}"{% endif %}>
+          Tu navegador no soporta video HTML5.
         </video>
-  
-        <div class="custom-controls">
-          <button class="play-pause"><i class="fas fa-play"></i></button>
-          <div class="progress-bar">
-            <div class="progress"></div>
-          </div>
-          <div class="time">00:00 / 00:00</div>
-          <button class="fullscreen"><i class="fas fa-expand"></i></button>
-        </div>
       </div>
 
       <div class="video-info">
@@ -111,10 +102,11 @@
           <p>450K vistas • hace 1 mes</p>
         </div>
       </div>
-      
     </aside>
   </main>
-
-  <script src="js/video-player.js"></script>
 </body>
+<script>
+  window.videoIdGlobal = {{ video.id_video }};
+</script>
+<script src="{% static 'videos/js/pagvideo.js' %}"></script>
 </html>

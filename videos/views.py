@@ -3,7 +3,7 @@ import os  # Para trabajar con paths y nombres de archivos
 import shutil  # Para eliminar directorios completos
 from django.conf import settings  # Para obtener el MEDIA_PATH
 from django.db import transaction
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.crypto import get_random_string
 from django.utils.decorators import method_decorator
@@ -63,11 +63,23 @@ def ver_video(request, video_id):
                 id_usuario = request.usuario,
                 id_video = Videos.objects.get(id_video=video_id)
             )
-            
+
     except Exception as e:
         pass
 
-    return render(request, 'pagvideo.html', {'video': video})
+    try:
+        if video.miniatura:
+            s3 = S3Manager()
+            link_miniatura = s3.get_object(video.miniatura, content_type='image/jpeg')
+        else:
+            link_miniatura = None
+    except Exception as e:
+        pass
+
+    return render(request, 'pagvideo.html', 
+                  {'video': video,
+                    'miniatura': link_miniatura
+                    })
 
 
 
@@ -346,3 +358,15 @@ def video_nube(request, video_id):
         return JsonResponse({'ok': True})
     except Videos.DoesNotExist:
         return JsonResponse({'ok': False, 'error': 'Video no existe'}, status=404)
+
+def stream_m3u8(request, video_id):
+    """
+    Devuelve el contenido del index.m3u8 con URLs firmadas para los fragmentos .ts.
+    """
+    try:
+        ruta = f"videos/video{video_id}/index.m3u8"
+        s3 = S3Manager()
+        contenido_modificado = s3.generar_m3u8_con_urls_firmadas(ruta)
+        return HttpResponse(contenido_modificado, content_type='application/vnd.apple.mpegurl')
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

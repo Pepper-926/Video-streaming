@@ -1,5 +1,6 @@
 import boto3
 import os
+import tempfile
 from django.conf import settings
 
 class S3Manager:
@@ -160,3 +161,43 @@ class S3Manager:
             return post
         except Exception as e:
             raise Exception(f"Error generando URL POST: {str(e)}")
+        
+    def generar_m3u8_con_urls_firmadas(self, ruta_index_m3u8, expires_in=3600):
+        """
+        Descarga el archivo index.m3u8 desde S3, genera URLs firmadas para los .ts,
+        reemplaza las líneas y devuelve el contenido modificado como texto.
+
+        Args:
+            ruta_index_m3u8 (str): Ruta completa al index.m3u8 en S3 (ej. videos/video69/index.m3u8)
+            expires_in (int): Duración de las URLs firmadas en segundos.
+
+        Returns:
+            str: Contenido del m3u8 con URLs firmadas.
+        """
+
+        try:
+            # 1. Descargar el archivo index.m3u8 de S3 a un archivo temporal
+            with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as temp_file:
+                self.s3.download_fileobj(
+                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                    Key=ruta_index_m3u8,
+                    Fileobj=temp_file
+                )
+                temp_file.seek(0)
+                lines = temp_file.read().decode('utf-8').splitlines()
+
+            # 2. Firmar las líneas que hacen referencia a .ts
+            carpeta = ruta_index_m3u8.rsplit('/', 1)[0]
+            nuevas_lineas = []
+            for line in lines:
+                if line.endswith('.ts'):
+                    key = f"{carpeta}/{line}"
+                    url = self.get_object(key, content_type='video/MP2T', expires_in=expires_in)
+                    nuevas_lineas.append(url)
+                else:
+                    nuevas_lineas.append(line)
+
+            return "\n".join(nuevas_lineas)
+
+        except Exception as e:
+            raise Exception(f"Error procesando index.m3u8: {str(e)}")
