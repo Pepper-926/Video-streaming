@@ -16,6 +16,7 @@ def convertir_video_a_hls(video_id, _unused_path):
 
     # ----- conversión -----
     src_dir   = os.path.join(settings.MEDIA_ROOT, 'videos', f'video{video_id}')
+    print(src_dir)
     src_mp4   = os.path.join(src_dir, 'original.mp4')
     out_dir   = os.path.join(settings.MEDIA_ROOT, 'stream', str(video_id))
     convertir_a_hls(src_mp4, out_dir)

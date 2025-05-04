@@ -3,7 +3,7 @@ from . import views
 
 
 urlpatterns  = [
-    path('index/', views.index, name='index'),
+    path('', views.index, name='index'),
     path('videos/upload/', views.form_video, name='form_video'),
     path('videos/', views.VideosView.as_view(), name='VideosView'),
     path('videos/<int:video_id>', views.VideoDetailsViews.as_view(), name='VideoDetailsViews'),

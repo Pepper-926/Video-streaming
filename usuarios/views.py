@@ -1,9 +1,80 @@
 from django.shortcuts import render, redirect
-from usuarios.models import Usuarios, Roles, Canales
+from usuarios.models import Usuarios, Roles, Canales, PasswordResetToken
 import datetime
 from django.conf import settings
 from .utils import generar_token, generar_hash
-from django.contrib.auth.hashers import make_password, check_password
+import secrets
+from django.core.mail import send_mail
+from django.utils import timezone
+
+def solicitar_recuperacion(request):
+    if request.method == 'POST':
+        correo = request.POST['correo']
+        
+        try:
+            # Obtener el usuario
+            usuario = Usuarios.objects.get(correo=correo)
+
+            # Generar un token único de recuperación
+            token = secrets.token_urlsafe(32)  # Genera un token aleatorio y seguro
+
+            # Crear un registro del token en la base de datos
+            token_registro = PasswordResetToken.objects.create(
+                id_usuario=usuario,
+                token=token,
+                created_at=timezone.now(),
+                is_used=False
+            )
+
+            # Enviar el correo con el enlace de recuperación
+            recovery_url = f"{settings.SITE_URL}/recuperar/{token}/"  # Asegúrate de que SITE_URL esté configurado correctamente
+
+            send_mail(
+                'Recuperación de contraseña',
+                f'Para recuperar tu contraseña, haz clic en el siguiente enlace: {recovery_url}',
+                'no-reply@miapp.com',
+                [correo],
+                fail_silently=False,
+            )
+
+            return render(request, 'recuperar_contrasena.html', {'aviso': 'Correo enviado, revíselo'})
+        
+        except Usuarios.DoesNotExist:
+            return render(request, 'recuperar_contrasena.html', {'error': 'Correo no registrado'})
+
+    return render(request, 'recuperar_contrasena.html')
+
+def cambiar_contrasena(request, token):
+    try:
+        # Verificar el token
+        token_obj = PasswordResetToken.objects.get(token=token, is_used=False)
+
+        # Verificar si el token ha expirado (ejemplo: 1 hora de validez)
+        if (timezone.now() - token_obj.created_at).total_seconds() > 3600:  # 1 hora
+            return redirect('solicitar_recuperacion', {'error': 'El token ha expirado.'})
+
+        if request.method == 'POST':
+            nueva_contrasena = request.POST['nueva_contrasena']
+            confirmacion_contrasena = request.POST['confirmacion_contrasena']
+
+            if nueva_contrasena != confirmacion_contrasena:
+                return render(request, 'cambiar_contrasena.html', {'error': 'Las contraseñas no coinciden'})
+
+            # Cambiar la contraseña del usuario
+            usuario = token_obj.id_usuario
+            usuario.contra = generar_hash(nueva_contrasena)
+            usuario.save()
+
+            # Marcar el token como usado
+            token_obj.is_used = True
+            token_obj.save()
+
+            return redirect('login')  # Redirigir al login después de actualizar la contraseña
+
+        return render(request, 'cambiar_contrasena.html')
+
+    except PasswordResetToken.DoesNotExist:
+        return redirect('solicitar_recuperacion', {'error': 'Token inválido o ya utilizado.'})
 
 def login(request):
     if request.method == 'POST':

@@ -1,10 +1,10 @@
 from django.urls import path
 from . import views
-from videos import views as videos_views
 
 
 urlpatterns  = [
-    path('', views.registrar_usuario, name = 'registrar_usuario'),
+    path('registro/', views.registrar_usuario, name = 'registrar_usuario'),
     path('login/', views.login, name = 'login'),
-    path('index/', videos_views.index, name='index'),
+    path('recuperar/', views.solicitar_recuperacion, name='solicitar_recuperacion'),
+    path('recuperar/<str:token>/', views.cambiar_contrasena, name='cambiar_contrasena'),
 ]
