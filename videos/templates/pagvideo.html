@@ -1,17 +1,18 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reproductor de Video | Flixy</title>
-  <link rel="stylesheet" href="css/pagvideo.css">
-  <link rel="icon" type="image/x-icon" href="img/icon.png">
+  <link rel="icon" type="image/x-icon" href="{% static 'videos/img/icon.png' %}">
+  <link rel="stylesheet" href="{% static 'videos/css/pagvideo.css' %}">
 </head>
 <body>
 
   <header class="video-header">
     <div class="header-container">
-      <div class="logo"><a href="inicio.html">Flixy</div>
+      <div class="logo"><a href="/">Flixy</div>
       
       <div class="search-bar">
         <input type="text" placeholder="Buscar videos...">
@@ -47,12 +48,12 @@
       </div>
 
       <div class="video-info">
-        <h1 class="video-title">Cómo crear un diseño profesional con CSS</h1>
+        <h1 class="video-title">{{ video.titulo }}</h1>
         <div class="video-meta">
-          <span class="views">1.2M vistas</span>
-          <span class="date">Publicado hace 2 semanas</span>
+          <span class="views">{{  video.reproducciones }} vistas</span>
+          <span class="date">Publicado el {{ video.fecha_publicado }}</span>
           <div class="actions">
-            <button class="like-btn"><i class="fas fa-thumbs-up"></i> 25K</button>
+            <button class="like-btn"><i class="fas fa-thumbs-up"></i>{{ video.me_gusta }}</button>
             <button class="share-btn"><i class="fas fa-share"></i> Compartir</button>
             <button class="save-btn"><i class="fas fa-bookmark"></i> Guardar</button>
           </div>
@@ -62,12 +63,12 @@
           <div class="channel-info">
             <img src="img/channel-pic.jpg" alt="Canal" class="channel-img">
             <div>
-              <h3 class="channel-name">Diseño Web Pro</h3>
-              <p class="subscribers">150K suscriptores</p>
+              <h3 class="channel-name">{{ video.nombre_canal }}</h3>
+              <p class="subscribers">{{ video.seguidores }} suscriptores</p>
             </div>
             <button class="subscribe-btn">Suscribirse</button>
           </div>
-          <p class="description-text">En este tutorial aprenderás técnicas avanzadas de CSS para crear diseños profesionales. Incluye Flexbox, Grid, animaciones y efectos modernos que harán que tus proyectos destaquen.</p>
+          <p class="description-text">{{ video.descripcion }}</p>
         </div>
       </div>
       

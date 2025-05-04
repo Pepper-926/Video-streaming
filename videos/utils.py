@@ -52,3 +52,12 @@ def optimizar_imagen(imagen_file, calidad=70, formato_salida='JPEG', resize_mini
     # Codificar a base64
     base64_string = base64.b64encode(buffer.read()).decode('utf-8')
     return base64_string
+
+def strtobool(val):
+    val = val.lower()
+    if val in ('y', 'yes', 't', 'true', 'on', '1'):
+        return True
+    elif val in ('n', 'no', 'f', 'false', 'off', '0'):
+        return False
+    else:
+        raise ValueError(f"Invalid truth value: {val}")

@@ -87,7 +87,7 @@ def login(request):
 
             if contra_hash == usuario.contra:
                 token = generar_token(usuario)
-                response = redirect('index')
+                response = redirect('/')
                 response.set_cookie('jwt', token, httponly=True, max_age=3600)
                 return response
             else:
@@ -175,14 +175,15 @@ def registrar_usuario(request):
 
         token = generar_token(nuevo_usuario)
 
-        response = redirect('index')
+        response = redirect('login')
+        '''
         response.set_cookie(
                 key='jwt',
                 value=token,
                 httponly=True,
                 max_age=3600
             )
-
+        '''
         return response
     return render(request, 'registro.html')
 

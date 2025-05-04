@@ -1,20 +1,23 @@
+import json
 import os  # Para trabajar con paths y nombres de archivos
 import shutil  # Para eliminar directorios completos
 from django.conf import settings  # Para obtener el MEDIA_PATH
 from django.db import transaction
 from django.http import JsonResponse, Http404
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.crypto import get_random_string
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_GET, require_POST
-from .decoradores import verificar_token
+from .decoradores import verificar_token, intentar_verificar_token
 from .forms import VideoUploadForm  # Obtener form que se devuelve al cliente
-from .models import Videos, EtiquetasDeVideos
+from .models import Videos, EtiquetasDeVideos, VistaCanalDeVideo, Historial, VwDetalleVideo
 from .querys import asociar_etiquetas
-from .services.s3_storage import S3Manager
 from .tasks import convertir_video_a_hls
-from .utils import optimizar_imagen
-from usuarios.models import Canales
+from .utils import optimizar_imagen, strtobool
+from services.s3_storage import S3Manager
+from usuarios.models import Canales, Roles
+
 from django.views.decorators.csrf import csrf_exempt #para pruebas
 
 
@@ -34,6 +37,36 @@ def form_video(request):
 def confirmar_subida(request, video_id):
     return render(request, 'video_subida.html', {'video_id': video_id})
 
+#View para visualizar el video junto sus comentarios
+@intentar_verificar_token
+def ver_video(request, video_id):
+    video = get_object_or_404(VwDetalleVideo, id_video=video_id)
+    token_privado = request.GET.get('token')
+
+    # Validación de visibilidad del video
+    if not video.publico and token_privado != video.token_acceso_privado:
+        return JsonResponse({'ok': False, 'message': 'Acceso no autorizado.'}, status=403)
+
+    # Aquí se podría añadir la validación de revisión si se activa en el futuro
+    # if not video.revisado:
+    #     return JsonResponse({
+    #         'ok': False,
+    #         'message': 'El video no ha sido revisado por un administrador.'
+    #     }, status=403)
+
+    #Aqui se hace un conteo en la tabla historial para manejar el historial de cada usuario y cuantas visualizacion tiene cada video. SOLO SE CUENTA SI EL USUARIO ESTA AUTENTICADO
+
+    if request.usuario:
+        
+        historial = Historial.objects.create(
+            id_usuario = request.usuario,
+            id_video = Videos.objects.get(id_video=video_id)
+        )
+
+    return render(request, 'pagvideo.html', {'video': video})
+
+
+
 
 '''
 Esta es la api /videos
@@ -45,20 +78,34 @@ class VideosView(View):
         try:
             s3 = S3Manager()
             videos = Videos.objects.filter(publico=True)
-            data = [{
-                'id_video': v.id_video,
-                'titulo': v.titulo,
-                'descripcion': v.descripcion,
-                'link': s3.get_object(v.link, content_type='application/vnd.apple.mpegurl'),
-                'miniatura': s3.get_object(v.miniatura, content_type='image/jpeg') if v.miniatura else None,
-                'etiquetas': [
-                    etiqueta.categoria
-                    for etiqueta in EtiquetasDeVideos.objects.filter(id_video=v.id_video)
-                ]
-            } for v in videos]
+
+            # Cargar todos los registros de la vista relacionados a estos videos
+            canal_map = {
+                c.id_video: c for c in VistaCanalDeVideo.objects.filter(publico=True)
+            }
+
+            data = []
+
+            for v in videos:
+                canal_info = canal_map.get(v.id_video)
+
+                data.append({
+                    'id_video': v.id_video,
+                    'titulo': v.titulo,
+                    'descripcion': v.descripcion,
+                    'link': s3.get_object(v.link, content_type='application/vnd.apple.mpegurl'),
+                    'miniatura': s3.get_object(v.miniatura, content_type='image/jpeg') if v.miniatura else None,
+                    'etiquetas': [
+                        etiqueta.categoria
+                        for etiqueta in EtiquetasDeVideos.objects.filter(id_video=v.id_video)
+                    ],
+                    'canal': canal_info.nombre_canal if canal_info else None,
+                    'foto_perfil': s3.get_object(canal_info.foto_perfil, content_type='image/jpeg') if canal_info and canal_info.foto_perfil else None 
+                })
+
             return JsonResponse({'videos': data}, status=200)
         except Exception as e:
-            return JsonResponse({'error': e}, status=500)
+            return JsonResponse({'error': str(e)}, status=500)
     
     @transaction.atomic
     def post(self, request):
@@ -80,7 +127,12 @@ class VideosView(View):
 
         # 2 ─── Crear registro con link vacío para obtener id ──────────────
         canal = Canales.objects.get(id_usuario=request.usuario)
-        es_publico  = form.cleaned_data['visibility'] == 'public'
+        if form.cleaned_data['visibility'] == 'public':
+            es_publico = True
+            token = None
+        else:
+            es_publico = False
+            token = get_random_string(48)
 
         video = Videos.objects.create(
             link      = '',
@@ -88,7 +140,8 @@ class VideosView(View):
             titulo    = form.cleaned_data['title'],
             descripcion = form.cleaned_data['description'],
             publico   = es_publico,
-            id_canal  = canal
+            id_canal  = canal,
+            token_acceso_privado = token
         )
 
         # 3 ─── Construir rutas DEFINITIVAS usando id_video ────────────────
@@ -96,7 +149,6 @@ class VideosView(View):
         os.makedirs(os.path.join(settings.MEDIA_ROOT, vid_dir), exist_ok=True)
 
         final_video_rel = f"{vid_dir}/index.m3u8"
-        final_video_fs  = os.path.join(settings.MEDIA_ROOT, final_video_rel)
 
         # mueve el mp4 temporal al lugar donde FFmpeg lo leerá
         final_src_mp4    = f"{vid_dir}/original.mp4"
@@ -139,27 +191,35 @@ class VideosView(View):
 Esta es la api /videos/<id>
 '''
 @method_decorator(verificar_token, name='delete')
+@method_decorator(verificar_token, name='put')
 @method_decorator(csrf_exempt, name='dispatch')
 class VideoDetailsViews(View):
     def get(self, request, video_id):
         try:
             s3 = S3Manager()
             video = Videos.objects.get(id_video=video_id)
+
+            # Buscar canal asociado desde la vista
+            canal_info = VistaCanalDeVideo.objects.filter(id_video=video_id).first()
+
             data = {
                 'id_video': video.id_video,
-                    'titulo': video.titulo,
-                    'descripcion': video.descripcion,
-                    'link': s3.get_object(video.link, content_type='application/vnd.apple.mpegurl'),
-                    'miniatura': s3.get_object(video.miniatura, content_type='image/jpeg') if video.miniatura else None,
-                    'etiquetas': [
-                        etiqueta.categoria
-                        for etiqueta in EtiquetasDeVideos.objects.filter(id_video=video.id_video)
-                    ]
+                'titulo': video.titulo,
+                'descripcion': video.descripcion,
+                'link': s3.get_object(video.link, content_type='application/vnd.apple.mpegurl') if video.link else None,
+                'miniatura': s3.get_object(video.miniatura, content_type='image/jpeg') if video.miniatura else None,
+                'etiquetas': [
+                    etiqueta.categoria
+                    for etiqueta in EtiquetasDeVideos.objects.filter(id_video=video.id_video)
+                ],
+                'canal': canal_info.nombre_canal if canal_info else None,
+                'foto_perfil': s3.get_object(canal_info.foto_perfil, content_type='image/jpeg') if canal_info and canal_info.foto_perfil else None
             }
-            return JsonResponse(data)            
+            return JsonResponse(data, status=200)            
        
         except Exception as e:
-           return JsonResponse({'error': str(e)})
+           return JsonResponse({'error': str(e)}, status=500)
+
     
     def delete(self, request, video_id):
         try:
@@ -178,6 +238,59 @@ class VideoDetailsViews(View):
 
         except Exception as e:
             return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+    def put(self, request, video_id):
+        try:
+            video = Videos.objects.get(id_video=video_id)
+
+            #Verifica que el que lo quiere modificar sea el usuario duenio del video o un admin
+            if request.usuario.id_rol.rol != 'admin' and video.id_canal.id_usuario != request.usuario:
+                return JsonResponse({'ok': False, 'message': 'No tienes permiso para modificar este video'}, status=403)
+
+            # Parsear el body del request (asumiendo que es JSON)
+            body = json.loads(request.body)
+
+            calificacion = body.get('calificacion')
+            titulo = body.get('titulo')
+            descripcion = body.get('descripcion')
+            revisado = body.get('revisado')
+            publico = body.get('publico')
+            miniatura = body.get('miniatura')
+            # Aún no se usa miniatura_img
+
+            if calificacion is not None:
+                video.calificacion = calificacion
+            if titulo is not None:
+                video.titulo = titulo
+            if descripcion is not None:
+                video.descripcion = descripcion
+            if revisado is not None:
+                if request.usuario.id_rol.rol == 'admin':
+                    video.revisado = bool(strtobool(str(revisado)))
+                else:
+                    return JsonResponse({'ok':False,'message':f'Solo un administrador puede modificar el campo revisado. Tu rol es: {request.usuario.id_rol.rol}'})
+            if publico is not None:
+                video.publico = bool(strtobool(str(publico)))
+            if miniatura is not None:
+                video.miniatura = miniatura  # futura integración con S3
+
+            video.save()
+            return JsonResponse({
+                'ok': True,
+                'video': {
+                    'id_video': video.id_video,
+                    'titulo': video.titulo,
+                    'descripcion': video.descripcion,
+                    'calificacion': video.calificacion,
+                    'publico': video.publico,
+                    'revisado': video.revisado,
+                    'miniatura': video.miniatura
+                }
+            }, status=200)
+
+        except Exception as e:
+            return JsonResponse({'ok': False, 'message': str(e)}, status=500)
+
 
 
 

@@ -1,0 +1,1 @@
+Esta carpeta es para poner aqui las clases que gestionan un servicio. Ejemplo: la clase s3 gestiona el servicio de la nube

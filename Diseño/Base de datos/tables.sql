@@ -3,6 +3,15 @@ CREATE TABLE Roles (
     rol VARCHAR(10) UNIQUE NOT NULL
 );
 
+CREATE TABLE PasswordResetToken (
+    id SERIAL PRIMARY KEY,  -- ID único para cada token (autoincremental)
+    id_usuario INTEGER NOT NULL,  -- Relación con la tabla de usuarios
+    token VARCHAR(255) NOT NULL,  -- Token de recuperación
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,  -- Fecha de creación del token
+    is_used BOOLEAN DEFAULT FALSE,  -- Indica si el token ha sido utilizado
+    CONSTRAINT fk_user FOREIGN KEY(id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE  -- Relación con la tabla auth_user (que es donde se encuentra el modelo User)
+);
+
 CREATE TABLE Usuarios (
     id_usuario INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nombre VARCHAR(16) NOT NULL,
@@ -26,7 +35,7 @@ CREATE TABLE Seguidores (
 
 CREATE TABLE Canales (
     id_canal INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    nombre VARCHAR(30) UNIQUE NOT NULL,
+    nombre_canal VARCHAR(30) UNIQUE NOT NULL,
     id_usuario INT NOT NULL,
     CONSTRAINT fk_canales_usuario FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
 );
@@ -88,6 +97,7 @@ CREATE TABLE Historial (
     id_usuario INT NOT NULL,
     id_video INT NOT NULL,
     fecha_visto TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    eliminado BOOLEAN DEFAULT FALSE NOT NULL,
     PRIMARY KEY (id_usuario, id_video, fecha_visto),
     CONSTRAINT fk_historial_usuario FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
     CONSTRAINT fk_historial_video FOREIGN KEY (id_video) REFERENCES Videos(id_video) ON DELETE CASCADE
