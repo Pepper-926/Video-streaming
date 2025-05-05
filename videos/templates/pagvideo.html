@@ -90,18 +90,6 @@
     
     <aside class="recommended-videos">
       <h2>Recomendados</h2>
-      
-      <div class="recommended-item">
-        <div class="thumbnail">
-          <img src="img/thumb1.jpg" alt="Video recomendado">
-          <span class="duration">12:45</span>
-        </div>
-        <div class="video-details">
-          <h3>Diseño responsivo en 2023</h3>
-          <p>Web Design</p>
-          <p>450K vistas • hace 1 mes</p>
-        </div>
-      </div>
     </aside>
   </main>
 </body>
@@ -109,4 +97,9 @@
   window.videoIdGlobal = {{ video.id_video }};
 </script>
 <script src="{% static 'videos/js/pagvideo.js' %}"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    load_videos();
+  });
+</script>
 </html>

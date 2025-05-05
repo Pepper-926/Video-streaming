@@ -109,7 +109,6 @@ class VideosView(View):
                     'id_video': v.id_video,
                     'titulo': v.titulo,
                     'descripcion': v.descripcion,
-                    'link': s3.get_object(v.link, content_type='application/vnd.apple.mpegurl'),
                     'miniatura': s3.get_object(v.miniatura, content_type='image/jpeg') if v.miniatura else None,
                     'etiquetas': [
                         etiqueta.categoria

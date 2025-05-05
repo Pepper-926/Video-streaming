@@ -23,3 +23,45 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   });
   
+async function load_videos() {
+  try {
+    const res = await fetch("/videos");
+    const json = await res.json();
+    const videos = json.videos;
+
+    const container = document.querySelector(".recommended-videos");
+
+    for (const video of videos) {
+
+      const item = document.createElement("div");
+      item.classList.add("recommended-item");
+    
+      // Creamos el HTML del bloque de etiquetas como <span>
+      const etiquetasHTML = video.etiquetas.map(etiqueta => `
+        <span class="etiqueta">${etiqueta}</span>
+      `).join('');
+    
+      item.innerHTML = `
+        <div class="thumbnail">
+          <img src="${video.miniatura}" alt="Video recomendado">
+          <span class="duration">12:45</span>
+        </div>
+        <div class="video-details">
+          <h3>${video.titulo}</h3>
+          <div class="etiquetas">${etiquetasHTML}</div>
+          <p>${video.canal}</p>
+        </div>
+      `;
+    
+      item.addEventListener("click", () => {
+        window.location.href = `/videos/ver/${video.id_video}`;
+      });
+    
+      container.appendChild(item);
+      
+    }
+    
+  } catch (error) {
+    console.error("Error al cargar videos:", error);
+  }
+}
