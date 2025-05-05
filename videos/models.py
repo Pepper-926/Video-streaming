@@ -107,12 +107,13 @@ class LikesDislikesVideos(models.Model):
         unique_together = (('id_usuario', 'id_video'),)
 
 class Historial(models.Model):
+    id = models.AutoField(primary_key=True)
     id_usuario = models.ForeignKey('usuarios.Usuarios', on_delete=models.CASCADE, db_column='id_usuario')
-    id_video = models.ForeignKey(Videos, on_delete=models.CASCADE, db_column='id_video', primary_key=True)
+    id_video = models.ForeignKey(Videos, on_delete=models.CASCADE, db_column='id_video')
     fecha_visto = models.DateTimeField(auto_now_add=True)
     eliminado = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'historial'
         unique_together = (('id_usuario', 'id_video', 'fecha_visto'),)
-        verbose_name_plural = 'Historial'            
+        verbose_name_plural = 'Historial'     

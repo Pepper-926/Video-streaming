@@ -58,14 +58,14 @@ def ver_video(request, video_id):
 
     try:
         if request.usuario:
-        
+            
             Historial.objects.create(
                 id_usuario = request.usuario,
                 id_video = Videos.objects.get(id_video=video_id)
             )
 
     except Exception as e:
-        pass
+        print(e)
 
     try:
         if video.miniatura:
