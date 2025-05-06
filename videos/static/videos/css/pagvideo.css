@@ -510,3 +510,36 @@
     border-radius: 10px;
     display: inline-block;
   }
+
+  /*Boton para enviar comentario*/
+  .comment-btn {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    margin-left: 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  
+  .comment-btn:hover {
+    background-color: #e63946;
+  }
+
+  /*css de etiquetas*/
+  .video-tags {
+    margin-top: 10px;
+  }
+  
+  .video-tags .tag {
+    display: inline-block;
+    background-color: #eee;
+    color: #333;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-right: 5px;
+  }
+  

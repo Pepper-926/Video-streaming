@@ -59,30 +59,25 @@
             <button class="subscribe-btn">Suscribirse</button>
           </div>
           <p class="description-text">{{ video.descripcion }}</p>
+          <div class="video-tags">
+            {% for etiqueta in etiquetas %}
+              <span class="tag">{{ etiqueta.categoria }}</span>
+            {% endfor %}
+          </div>
+        </div>
         </div>
       </div>
       
       <section class="comments-section">
         <h2><i class="fas fa-comments"></i> 1,248 Comentarios</h2>
-        <div class="add-comment">
+        <form id="comentario-form" class="add-comment" method="POST">
+          {% csrf_token %}
           <img src="img/profile-pic.jpg" alt="Usuario" class="user-img">
-          <input type="text" placeholder="Añade un comentario público...">
-        </div>
-
-        <div class="comments-list">
-          <div class="comment">
-            <img src="img/user1.jpg" alt="Usuario" class="user-img">
-            <div class="comment-content">
-              <h3>Juan Pérez <span>hace 3 días</span></h3>
-              <p>Excelente tutorial! Justo lo que necesitaba para mejorar mis diseños. ¿Harás uno sobre animaciones CSS?</p>
-              <div class="comment-actions">
-                <button><i class="fas fa-thumbs-up"></i> 245</button>
-                <button><i class="fas fa-thumbs-down"></i></button>
-                <button>Responder</button>
-              </div>
-            </div>
-          </div>
-          
+          <input type="hidden" name="id_video" value="{{ video.id_video }}">
+          <input type="text" name="contenido" placeholder="Añade un comentario público..." required>
+          <button type="submit" class="comment-btn">Enviar</button>
+        </form>
+        <div class="comments-list" id="comments-list">
         </div>
       </section>
     </section>
@@ -96,6 +91,7 @@
   window.videoIdGlobal = {{ video.id_video }};
 </script>
 <script src="{% static 'videos/js/pagvideo.js' %}"></script>
+<script src="{% static 'videos/js/comentarios.js' %}"></script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     load_videos();

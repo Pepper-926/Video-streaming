@@ -11,7 +11,7 @@ from django.views import View
 from django.views.decorators.http import require_GET, require_POST
 from .decoradores import verificar_token, intentar_verificar_token
 from .forms import VideoUploadForm  # Obtener form que se devuelve al cliente
-from .models import Videos, EtiquetasDeVideos, VistaCanalDeVideo, Historial, VwDetalleVideo
+from .models import Videos, EtiquetasDeVideos, VistaCanalDeVideo, Historial, VwDetalleVideo, Etiquetas
 from .querys import asociar_etiquetas
 from .tasks import convertir_video_a_hls
 from .utils import optimizar_imagen, strtobool
@@ -74,11 +74,19 @@ def ver_video(request, video_id):
         else:
             link_miniatura = None
     except Exception as e:
-        pass
+        print(e)
+
+    try:
+        etiquetas = Etiquetas.objects.filter(videosetiquetas__id_video=video_id)
+    except Exception as e:
+        print(e)
+    
+    print(etiquetas)
 
     return render(request, 'pagvideo.html', 
                   {'video': video,
-                    'miniatura': link_miniatura
+                    'miniatura': link_miniatura,
+                    'etiquetas': etiquetas
                     })
 
 
