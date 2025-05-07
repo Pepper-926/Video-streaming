@@ -101,16 +101,27 @@ class VideosView(View):
     def get(self, request):
         try:
             s3 = S3Manager()
-            videos = Videos.objects.filter(publico=True)
+            revisado_param = request.GET.get('revisado')
 
-            # Cargar todos los registros de la vista relacionados a estos videos
+            if revisado_param is not None:
+                if request.user.id_rol.rol == 'admin': #valida que el admin solo pueda acceder a estos videos
+                # Convertir el string a booleano
+                    revisado = revisado_param.lower() == 'true'
+                    videos_query = Videos.objects.filter(revisado=revisado)
+                else:
+                    return JsonResponse({'ok':False,'message':'Solo un usuario administrador tiene acceso a este endpoint.'})
+            else:
+                # Solo videos públicos si no se especifica el filtro revisado
+                videos_query = Videos.objects.filter(publico=True)
+
+            # Canal público solo (no depende de revisado)
             canal_map = {
                 c.id_video: c for c in VistaCanalDeVideo.objects.filter(publico=True)
             }
 
             data = []
 
-            for v in videos:
+            for v in videos_query:
                 canal_info = canal_map.get(v.id_video)
 
                 data.append({

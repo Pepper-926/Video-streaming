@@ -65,9 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <h3>${c.usuario} <span>${c.fecha}</span></h3>
               <p>${c.texto}</p>
               <div class="comment-actions">
-                <button><i class="fas fa-thumbs-up"></i></button>
-                <button><i class="fas fa-thumbs-down"></i></button>
-                <button>Responder</button>
+                <button id="boton_responder" onclick="responder_comentario(${c.id_comentario}, ${videoId})">Responder</button>
               </div>
             </div>
           </div>`;
@@ -77,4 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error("Error al cargar comentarios:", error);
     }
+  }
+
+  function responder_comentario(id_comentario, id_video) {
+    
   }
