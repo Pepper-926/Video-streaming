@@ -24,3 +24,23 @@ def verificar_token(func):
         return func(request, *args, **kwargs)
 
     return wrapper
+
+def intentar_verificar_token(func):
+    @wraps(func)
+    def wrapper(request, *args, **kwargs):
+        token = request.COOKIES.get('jwt')
+
+        try:
+            if token:
+                payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+                usuario = Usuarios.objects.get(id_usuario=payload['id_usuario'])
+                request.usuario = usuario  # Asignamos solo si es válido
+            else:
+                request.usuario = None
+                
+        except (jwt.ExpiredSignatureError, jwt.DecodeError, Usuarios.DoesNotExist):
+            pass  # Ignoramos cualquier error y seguimos sin asignar `request.usuario`
+
+        return func(request, *args, **kwargs)
+
+    return wrapper

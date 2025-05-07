@@ -348,6 +348,7 @@
   
   .comment {
     display: flex;
+    flex-direction: column;
     gap: 1rem;
   }
   
@@ -543,3 +544,32 @@
     margin-right: 5px;
   }
   
+  /*css de las respuestas*/
+  .respuesta {
+    display: flex;
+    flex-direction: row;  /* aún en fila, pero alineado desde la izquierda */
+    margin-left: 30px;    /* sangría para indicar jerarquía */
+    margin-top: 10px;
+    font-size: 0.7rem;
+    align-items: flex-start;
+  }
+  
+  .respuesta-img {
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    border-radius: 50%;
+  }
+  
+  .respuesta-content {
+    flex: 1;
+  }
+  
+  .respuesta-content h4 {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  
+  .respuesta-content p {
+    margin: 5px 0;
+  }
