@@ -134,6 +134,7 @@ class VideosView(View):
                         for etiqueta in EtiquetasDeVideos.objects.filter(id_video=v.id_video)
                     ],
                     'canal': canal_info.nombre_canal if canal_info else None,
+                    'link': s3.get_object(v.link, content_type='application/vnd.apple.mpegurl') if v.link else None,
                     'foto_perfil': s3.get_object(canal_info.foto_perfil, content_type='image/jpeg') if canal_info and canal_info.foto_perfil else None 
                 })
 
