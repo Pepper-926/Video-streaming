@@ -573,3 +573,45 @@
   .respuesta-content p {
     margin: 5px 0;
   }
+
+  /*hover de etiquetas*/
+  .etiqueta-tooltip {
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .etiqueta-tooltip .tooltip {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #333;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    margin-top: 5px;
+    z-index: 10;
+  }
+
+  .etiqueta-tooltip .tooltip {
+    max-width: 200px;
+    overflow-wrap: break-word;
+    white-space: normal; /* permite saltos de línea */
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .etiqueta-tooltip:hover .tooltip {
+    display: block;
+  }
+  
+  /*css boton de like*/
+  .fas {
+    background-color: white;
+    border: 50px;
+    border-radius: 50%;
+    width: 30px;
+  }

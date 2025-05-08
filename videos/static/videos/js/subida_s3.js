@@ -17,7 +17,7 @@
   
         if (!listo) {
           document.getElementById('estado')
-            .innerText = '⏳ Fragmentando video… (esperando a que termine)';
+            .innerText = '⏳ Fragmentando video… (esperando a que termine). Porfavor no abandone este sitio.';
           await new Promise(r => setTimeout(r, 3000)); // 3 s
         }
       } catch (err) {

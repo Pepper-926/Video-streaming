@@ -44,8 +44,9 @@
           <span class="views">{{  video.reproducciones }} vistas</span>
           <span class="date">Publicado el {{ video.fecha_publicado }}</span>
           <div class="actions">
-            <button class="like-btn"><i class="fas fa-thumbs-up"></i>{{ video.me_gusta }}</button>
-            <button class="share-btn"><i class="fas fa-share"></i>Compartir</button>
+            <button class="like-btn" id="like-btn" onclick="dar_like()"><img class="fas fa-thumbs-up" id="like-img" src="{% static 'videos/img/like-off.svg' %}"><span id="like-count">{{ video.me_gusta }}</span></button>
+            <button class="like-btn" id="dislike-btn" onclick="dar_dislike()"><img class="fas fa-thumbs-down" id="dislike-img" src="{% static 'videos/img/dislike-off.svg' %}"><span id="dislike-count">{{ video.no_me_gusta }}</span></button>
+            <button class="share-btn" onclick="copiar_link()"><img class="fas fa-share" src="{% static 'videos/img/copy.svg' %}">Compartir</button>
           </div>
         </div>
 
@@ -69,7 +70,7 @@
       </div>
       
       <section class="comments-section">
-        <h2><i class="fas fa-comments" id="num-comentarios">a</i></h2>
+        <h2 id="num-comentarios"><i class="fas fa-comments" ></i></h2>
         <form id="comentario-form" class="add-comment" method="POST">
           {% csrf_token %}
           <img src="img/profile-pic.jpg" alt="Usuario" class="user-img">

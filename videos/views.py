@@ -11,7 +11,7 @@ from django.views import View
 from django.views.decorators.http import require_GET, require_POST
 from .decoradores import verificar_token, intentar_verificar_token
 from .forms import VideoUploadForm  # Obtener form que se devuelve al cliente
-from .models import Videos, EtiquetasDeVideos, VistaCanalDeVideo, Historial, VwDetalleVideo, Etiquetas
+from .models import Videos, EtiquetasDeVideos, VistaCanalDeVideo, Historial, VwDetalleVideo, Etiquetas, LikesDislikesVideos
 from .querys import asociar_etiquetas
 from .tasks import convertir_video_a_hls
 from .utils import optimizar_imagen, strtobool
@@ -81,8 +81,6 @@ def ver_video(request, video_id):
         etiquetas = Etiquetas.objects.filter(videosetiquetas__id_video=video_id)
     except Exception as e:
         print(e)
-    
-    print(etiquetas)
 
     return render(request, 'pagvideo.html', 
                   {'video': video,
@@ -216,7 +214,7 @@ class VideosView(View):
         video.miniatura = final_thumb_rel
         video.save(update_fields=['link', 'miniatura'])
 
-        convertir_video_a_hls.delay(video.id_video, final_src_mp4_fs)
+        transaction.on_commit(lambda: convertir_video_a_hls.delay(video.id_video, final_src_mp4_fs))    
 
         # etiquetas
         asociar_etiquetas(video, form.cleaned_data['tags'])
@@ -326,6 +324,159 @@ class VideoDetailsViews(View):
 
         except Exception as e:
             return JsonResponse({'ok': False, 'message': str(e)}, status=500)
+
+'''
+/videos/<int:video_id>/like/
+'''
+@method_decorator(intentar_verificar_token, name='get')
+@method_decorator(verificar_token, name='post')
+class LikesVideos(View):
+    def get(self, request, video_id=None):
+        if not video_id:
+            return JsonResponse({
+                'ok': False,
+                'error': 'No se proporcionó un ID de video en la URL.'
+            }, status=400)
+
+        try:
+            video = Videos.objects.get(id_video=video_id)
+        except Videos.DoesNotExist:
+            return JsonResponse({
+                'ok': False,
+                'error': f'No se encontró un video con id {video_id}.'
+            }, status=404)
+
+        cantidad_dislikes = LikesDislikesVideos.objects.filter(
+            id_video=video,
+            tipo_reaccion=False
+        ).count()
+
+        ya_dio_dislike = False
+        if hasattr(request, 'usuario') and request.usuario:
+            ya_dio_dislike = LikesDislikesVideos.objects.filter(
+                id_video=video,
+                id_usuario=request.usuario,
+                tipo_reaccion=True
+            ).exists()
+
+        return JsonResponse({
+            'ok': True,
+            'likes': cantidad_dislikes,
+            'liked': ya_dio_dislike
+        })
+
+    def post(self, request, video_id):
+            try:
+                usuario = request.usuario
+                video = Videos.objects.get(id_video=video_id)
+
+                reaccion_existente = LikesDislikesVideos.objects.filter(
+                    id_usuario=usuario,
+                    id_video=video,
+                    tipo_reaccion=True
+                ).first()
+
+                if reaccion_existente:
+                    reaccion_existente.delete()
+                    liked = False
+                else:
+                    # Antes de crear un like, elimina cualquier dislike existente
+                    LikesDislikesVideos.objects.filter(
+                        id_usuario=usuario,
+                        id_video=video,
+                        tipo_reaccion=False  # elimina el like
+                    ).delete()
+                    LikesDislikesVideos.objects.create(
+                        id_usuario=usuario,
+                        id_video=video,
+                        tipo_reaccion=True
+                    )
+                    liked = True
+
+                cantidad_likes = LikesDislikesVideos.objects.filter(id_video=video, tipo_reaccion=True).count()
+                cantidad_dislikes = LikesDislikesVideos.objects.filter(id_video=video, tipo_reaccion=False).count()
+                return JsonResponse({'ok': True, 'liked': liked, 'likes': cantidad_likes, 'dislikes':cantidad_dislikes})
+
+            except Exception as e:
+                print(e)
+                return JsonResponse({'ok': False, 'message': str(e)}, status=500)
+            
+'''
+/videos/<int:video_id>/dislike/
+'''
+@method_decorator(intentar_verificar_token, name='get')
+@method_decorator(verificar_token, name='post')
+class DislikesVideos(View):
+    def get(self, request, video_id=None):
+        if not video_id:
+            return JsonResponse({
+                'ok': False,
+                'error': 'No se proporcionó un ID de video en la URL.'
+            }, status=400)
+
+        try:
+            video = Videos.objects.get(id_video=video_id)
+        except Videos.DoesNotExist:
+            return JsonResponse({
+                'ok': False,
+                'error': f'No se encontró un video con id {video_id}.'
+            }, status=404)
+
+        cantidad_dislikes = LikesDislikesVideos.objects.filter(
+            id_video=video,
+            tipo_reaccion=False
+        ).count()
+
+        ya_dio_dislike = False
+        if hasattr(request, 'usuario') and request.usuario:
+            ya_dio_dislike = LikesDislikesVideos.objects.filter(
+                id_video=video,
+                id_usuario=request.usuario,
+                tipo_reaccion=False
+            ).exists()
+
+        return JsonResponse({
+            'ok': True,
+            'dislikes': cantidad_dislikes,
+            'disliked': ya_dio_dislike
+        })
+
+    def post(self, request, video_id):
+            try:
+                usuario = request.usuario
+                video = Videos.objects.get(id_video=video_id)
+
+                reaccion_existente = LikesDislikesVideos.objects.filter(
+                    id_usuario=usuario,
+                    id_video=video,
+                    tipo_reaccion=False
+                ).first()
+
+                if reaccion_existente:
+                    reaccion_existente.delete()
+                    liked = False
+                else:
+                    # Antes de crear un dislike, elimina cualquier like existente
+                    LikesDislikesVideos.objects.filter(
+                        id_usuario=usuario,
+                        id_video=video,
+                        tipo_reaccion=True  # elimina el like
+                    ).delete()
+                    LikesDislikesVideos.objects.create(
+                        id_usuario=usuario,
+                        id_video=video,
+                        tipo_reaccion=False
+                    )
+                    liked = True
+
+                cantidad_likes = LikesDislikesVideos.objects.filter(id_video=video, tipo_reaccion=True).count()
+                cantidad_dislikes = LikesDislikesVideos.objects.filter(id_video=video, tipo_reaccion=False).count()
+                return JsonResponse({'ok': True, 'disliked': liked, 'likes': cantidad_likes, 'dislikes':cantidad_dislikes})
+
+            except Exception as e:
+                print(e)
+                return JsonResponse({'ok': False, 'message': str(e)}, status=500)
+
 
 
 
