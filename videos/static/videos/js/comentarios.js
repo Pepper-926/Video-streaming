@@ -48,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
   
+      const numComentarios = document.getElementById('num-comentarios');
+      numComentarios.innerHTML = `${data.num_comentarios} Comentarios`
       const tuId = data.tu_id;
       const commentsContainer = document.getElementById("comments-list");
       commentsContainer.innerHTML = "";

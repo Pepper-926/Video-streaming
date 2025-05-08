@@ -17,6 +17,7 @@ from .tasks import convertir_video_a_hls
 from .utils import optimizar_imagen, strtobool
 from services.s3_storage import S3Manager
 from usuarios.models import Canales
+from comentarios.models import Comentarios
 
 from django.views.decorators.csrf import csrf_exempt #para pruebas
 
@@ -86,7 +87,7 @@ def ver_video(request, video_id):
     return render(request, 'pagvideo.html', 
                   {'video': video,
                     'miniatura': link_miniatura,
-                    'etiquetas': etiquetas
+                    'etiquetas': etiquetas,
                     })
 
 

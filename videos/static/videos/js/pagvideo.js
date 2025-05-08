@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(m3u8Content => {
         const blob = new Blob([m3u8Content], { type: 'application/vnd.apple.mpegurl' });
         const url = URL.createObjectURL(blob);
-  
+
         if (Hls.isSupported()) {
           const hls = new Hls();
           hls.loadSource(url);

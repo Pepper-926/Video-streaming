@@ -49,7 +49,8 @@ class ViewComentarios(View):
             ]
 
             return JsonResponse({'comentarios': data,
-                                 'tu_id': request.usuario.id_usuario if request.usuario else None}, status=200)
+                                 'tu_id': request.usuario.id_usuario if request.usuario else None,
+                                 'num_comentarios':Comentarios.objects.filter(id_video=video_id).count()}, status=200)
 
         except Exception as e:
             print("Error al obtener comentarios:", str(e))
@@ -62,19 +63,25 @@ class ViewComentarios(View):
             id_video = data.get("id_video")
             text = data.get("contenido")
             id_usuario = request.usuario.id_usuario
-            id_respuesta = data.get("id_respuesta")
-            Comentarios.objects.create(
-                texto = text,
-                id_video = Videos.objects.get(id_video=id_video),
-                id_usuario = Usuarios.objects.get(id_usuario=id_usuario),
-                id_respuesta = Comentarios.objects.get(id_comentario=id_respuesta)
+            id_respuesta = data.get("id_respuesta")  # Puede ser None
+
+            nuevo_comentario = Comentarios(
+                texto=text,
+                id_video=Videos.objects.get(id_video=id_video),
+                id_usuario=Usuarios.objects.get(id_usuario=id_usuario)
             )
+
+            if id_respuesta:  # Solo si viene en la petición
+                nuevo_comentario.id_respuesta = Comentarios.objects.get(id_comentario=id_respuesta)
+
+            nuevo_comentario.save()
 
             return JsonResponse({"mensaje": "Datos recibidos correctamente"}, status=200)
 
         except Exception as e:
             print("Error al procesar comentario:", str(e))
             return JsonResponse({"error": str(e)}, status=400)
+
         
     def delete(self, request):
         try:
