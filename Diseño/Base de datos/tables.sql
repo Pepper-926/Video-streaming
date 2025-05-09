@@ -25,10 +25,11 @@ CREATE TABLE Usuarios (
     CONSTRAINT fk_usuarios_rol FOREIGN KEY (id_rol) REFERENCES Roles(id_rol) ON DELETE CASCADE
 );
 
-CREATE TABLE Seguidores (
+CREATE OR REPLACE TABLE Seguidores (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
     id_usuario INT NOT NULL,
     seguidor INT NOT NULL,
-    PRIMARY KEY(id_usuario, seguidor),
+    CONSTRAINT unique_usuario_seguidor UNIQUE (id_usuario, seguidor);
     CONSTRAINT fk_usuario_seguidor FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
     CONSTRAINT fk_seguidor_usuario FOREIGN KEY (seguidor) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
 );

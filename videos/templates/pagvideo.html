@@ -59,9 +59,9 @@
             <img src="{{ foto_perfil_canal }}" alt="Canal" class="channel-img">
             <div>
               <h3 class="channel-name">{{ video.nombre_canal }}</h3>
-              <p class="subscribers">{{ video.seguidores }} suscriptores</p>
+              <p class="subscribers" id="subscribers-count">{{ video.seguidores }} suscriptores</p>
             </div>
-            <button class="subscribe-btn">Suscribirse</button>
+            <button class="subscribe-btn" id="subscribe-btn" onclick="toggleSuscripcion()">Suscribirse</button>
           </div>
           <p class="description-text">{{ video.descripcion }}</p>
           <div class="video-tags">
@@ -101,6 +101,7 @@
 </script>
 <script src="{% static 'videos/js/pagvideo.js' %}"></script>
 <script src="{% static 'videos/js/comentarios.js' %}"></script>
+<script src="{% static 'videos/js/seguir_usuario.js' %}"></script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     load_videos();

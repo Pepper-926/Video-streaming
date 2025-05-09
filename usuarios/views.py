@@ -1,11 +1,19 @@
-from django.shortcuts import render, redirect
-from usuarios.models import Usuarios, Roles, Canales, PasswordResetToken
-import datetime
-from django.conf import settings
-from .utils import generar_token, generar_hash
 import secrets
+import datetime
+from django.shortcuts import render, redirect
+from django.conf import settings
+from django.views import View
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
 from django.utils import timezone
+from videos.decoradores import verificar_token
+from usuarios.models import Usuarios, Roles, Canales, PasswordResetToken, Seguidores
+from videos.models import Videos
+from .utils import generar_token, generar_hash
+
+from django.views.decorators.csrf import csrf_exempt #para pruebas
+
 
 def solicitar_recuperacion(request):
     if request.method == 'POST':
@@ -193,4 +201,84 @@ def logout(request):
     return response
 
 
+"""
+API /usuarios/seguir-autor-por-video/{video_id}
+"""
+@method_decorator(verificar_token, name='dispatch')
+#@method_decorator(verificar_token, name='delete')
+class SeguirPorVideo(View):
+    def get(self, request, video_id):
+        try:
+            video = Videos.objects.get(id_video=video_id)
+            usuario_objetivo = video.id_canal.id_usuario
+            usuario_actual = request.usuario
+
+            ya_sigue = Seguidores.objects.filter(
+                usuario=usuario_objetivo,
+                seguidor=usuario_actual
+            ).exists()
+
+            total_seguidores = Seguidores.objects.filter(usuario=usuario_objetivo).count()
+
+            return JsonResponse({
+                'ok': True,
+                'siguiendo': ya_sigue,
+                'seguidores': total_seguidores
+            }, status=200)
+
+        except Videos.DoesNotExist:
+            return JsonResponse({'ok': False, 'message': 'Video no encontrado.'}, status=404)
+
+        except Exception as e:
+            print(f'get Seguir por videos: {e}')
+            return JsonResponse({'ok': False, 'message': str(e)}, status=500)
+        
+    def post(self, request, video_id):
+            try:
+                video = Videos.objects.get(id_video=video_id)
+                usuario_objetivo = video.id_canal.id_usuario
+                usuario_actual = request.usuario
+
+                if usuario_objetivo == usuario_actual:
+                    return JsonResponse({'ok': False, 'message': 'No puedes seguirte a ti mismo.'}, status=400)
+
+                _, creado = Seguidores.objects.get_or_create(
+                    usuario=usuario_objetivo,
+                    seguidor=usuario_actual
+                )
+
+                return JsonResponse({'ok': True, 'seguido': creado}, status=201 if creado else 200)
+
+            except Videos.DoesNotExist:
+                return JsonResponse({'ok': False, 'message': 'Video no encontrado.'}, status=404)
+
+            except Exception as e:
+                print(f'post Seguir por videos: {e}')
+                return JsonResponse({'ok': False, 'message': str(e)}, status=500)
+            
+    def delete(self, request, video_id):
+        try:
+            video = Videos.objects.get(id_video=video_id)
+            usuario_objetivo = video.id_canal.id_usuario
+            usuario_actual = request.usuario
+
+            if usuario_objetivo == usuario_actual:
+                return JsonResponse({'ok': False, 'message': 'No puedes dejar de seguirte a ti mismo.'}, status=400)
+
+            eliminado, _ = Seguidores.objects.filter(
+                usuario=usuario_objetivo,
+                seguidor=usuario_actual
+            ).delete()
+
+            if eliminado:
+                return JsonResponse({'ok': True, 'message': 'Dejaste de seguir al autor.'}, status=200)
+            else:
+                return JsonResponse({'ok': False, 'message': 'No lo estabas siguiendo.'}, status=404)
+
+        except Videos.DoesNotExist:
+            return JsonResponse({'ok': False, 'message': 'Video no encontrado.'}, status=404)
+
+        except Exception as e:
+            print(f'Delete Seguir por videos: {e}')
+            return JsonResponse({'ok': False, 'message': str(e)}, status=500)
 
