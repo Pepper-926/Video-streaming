@@ -1,4 +1,5 @@
 import boto3
+import mimetypes
 import os
 import tempfile
 from django.conf import settings
@@ -201,3 +202,30 @@ class S3Manager:
 
         except Exception as e:
             raise Exception(f"Error procesando index.m3u8: {str(e)}")
+        
+    def get_object_auto_mime(self, ruta_s3, expires_in=3600):
+        """
+        Genera una URL firmada para descargar un objeto de S3,
+        detectando automáticamente el tipo MIME basado en la extensión del archivo.
+
+        Args:
+            ruta_s3 (str): La ruta del objeto en el bucket (key).
+            expires_in (int): Tiempo de expiración en segundos. Default: 3600 (1 hora).
+
+        Returns:
+            str: URL firmada para descarga con el tipo MIME adecuado.
+        """
+        content_type, _ = mimetypes.guess_type(ruta_s3)
+        if not content_type:
+            content_type = 'application/octet-stream'  # Valor por defecto seguro
+
+        url = self.s3.generate_presigned_url(
+            'get_object',
+            Params={
+                'Bucket': settings.AWS_STORAGE_BUCKET_NAME,
+                'Key': ruta_s3,
+                'ResponseContentType': content_type
+            },
+            ExpiresIn=expires_in
+        )
+        return url

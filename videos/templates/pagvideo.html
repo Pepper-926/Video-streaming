@@ -12,7 +12,7 @@
 <body>
   <header class="video-header">
     <div class="header-container">
-      <div class="logo"><a href="/">Flixy</div>
+      <div><a href="/" id="logo">Flixy</div>
       
       <div class="search-bar">
         <input type="text" placeholder="Buscar videos...">
@@ -20,9 +20,13 @@
       </div>
     
         <div class="top-bar">
+          {% if foto_perfil_usuario %}
           <a href="perfil.html">
-            <img src="img/perfil.png" alt="Perfil">
+            <img src="{{ foto_perfil_usuario }}" alt="Perfil" id="foto-perfil">
          </a>
+         {% else %}
+         <a href="/login" id="btn-login">Iniciar sesion</a>
+         {% endif %}
         </div>
       </div>
     </div>
@@ -42,7 +46,7 @@
         <h1 class="video-title">{{ video.titulo }}</h1>
         <div class="video-meta">
           <span class="views">{{  video.reproducciones }} vistas</span>
-          <span class="date">Publicado el {{ video.fecha_publicado }}</span>
+          <span class="date">Publicado el {{ fecha_video }}</span>
           <div class="actions">
             <button class="like-btn" id="like-btn" onclick="dar_like()"><img class="fas fa-thumbs-up" id="like-img" src="{% static 'videos/img/like-off.svg' %}"><span id="like-count">{{ video.me_gusta }}</span></button>
             <button class="like-btn" id="dislike-btn" onclick="dar_dislike()"><img class="fas fa-thumbs-down" id="dislike-img" src="{% static 'videos/img/dislike-off.svg' %}"><span id="dislike-count">{{ video.no_me_gusta }}</span></button>
@@ -52,7 +56,7 @@
 
         <div class="video-description">
           <div class="channel-info">
-            <img src="img/channel-pic.jpg" alt="Canal" class="channel-img">
+            <img src="{{ foto_perfil_canal }}" alt="Canal" class="channel-img">
             <div>
               <h3 class="channel-name">{{ video.nombre_canal }}</h3>
               <p class="subscribers">{{ video.seguidores }} suscriptores</p>
@@ -71,13 +75,17 @@
       
       <section class="comments-section">
         <h2 id="num-comentarios"><i class="fas fa-comments" ></i></h2>
+        {% if foto_perfil_usuario %}
         <form id="comentario-form" class="add-comment" method="POST">
           {% csrf_token %}
-          <img src="img/profile-pic.jpg" alt="Usuario" class="user-img">
+          <img src="{{ foto_perfil_usuario }}" alt="Usuario" class="user-img">
           <input type="hidden" name="id_video" value="{{ video.id_video }}">
           <input type="text" name="contenido" placeholder="Añade un comentario público..." required>
           <button type="submit" class="comment-btn">Enviar</button>
         </form>
+        {% else %}
+          <p>Inicia sesion para poder comentar y dar tu reaccion!!</p>
+        {% endif %}
         <div class="comments-list" id="comments-list">
         </div>
       </section>

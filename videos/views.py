@@ -1,6 +1,7 @@
 import json
 import os  # Para trabajar con paths y nombres de archivos
 import shutil  # Para eliminar directorios completos
+from datetime import timedelta
 from django.conf import settings  # Para obtener el MEDIA_PATH
 from django.db import transaction
 from django.http import JsonResponse, Http404, HttpResponse
@@ -43,6 +44,7 @@ def confirmar_subida(request, video_id):
 def ver_video(request, video_id):
     video = get_object_or_404(VwDetalleVideo, id_video=video_id)
     token_privado = request.GET.get('token')
+    fecha_local = video.fecha_publicado + timedelta(hours=-6) 
 
     # Validación de visibilidad del video
     if not video.publico and token_privado != video.token_acceso_privado:
@@ -55,7 +57,7 @@ def ver_video(request, video_id):
     #         'message': 'El video no ha sido revisado por un administrador.'
     #     }, status=403)
 
-    #Aqui se hace un conteo en la tabla historial para manejar el historial de cada usuario y cuantas visualizacion tiene cada video. SOLO SE CUENTA SI EL USUARIO ESTA AUTENTICADO
+    #Aqui se hace un conteo en la tabla historial para manejar el historial de cada usuario y cuantas visualizacion tiene cada video. SOLO SE CUENTA SI EL USUARIO ESTA AUTENTICADO. Tambien se hacen otras comprobaciones en caso de que este autenticado el usuario.
 
     try:
         if request.usuario:
@@ -79,6 +81,7 @@ def ver_video(request, video_id):
 
     try:
         etiquetas = Etiquetas.objects.filter(videosetiquetas__id_video=video_id)
+        
     except Exception as e:
         print(e)
 
@@ -86,6 +89,9 @@ def ver_video(request, video_id):
                   {'video': video,
                     'miniatura': link_miniatura,
                     'etiquetas': etiquetas,
+                    'foto_perfil_canal': s3.get_object_auto_mime(video.foto_perfil),
+                    'foto_perfil_usuario': s3.get_object_auto_mime(request.usuario.foto_perfil) if request.usuario else False,
+                    'fecha_video': fecha_local
                     })
 
 
