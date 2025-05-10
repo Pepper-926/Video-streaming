@@ -1,0 +1,107 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flixy - Panel Admin</title>
+  <link rel="stylesheet" href="{% static 'panel_admin/css/paneladmin.css' %}">
+  <link rel="icon" type="image/x-icon" href="img/icon.png">
+  <script src="{% static 'panel_admin/js/mostrar_videos.js' %}"></script>
+</head>
+<body>
+
+  <aside class="admin-sidebar">
+    <div class="admin-logo">Flixy Admin</div>
+    <nav>
+      <ul>
+        <li><a href="#" class="active" data-tab="videos">Aprobar Videos</a></li>
+        <li><a href="#" data-tab="comments">Moderar Comentarios</a></li>
+        <li><a href="#" data-tab="users">Gestionar Usuarios</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <section id="videos" class="admin-section active">
+      <h2>Videos Pendientes</h2>
+      <div class="admin-grid" id="videos-list">
+        <!-- Aquí se cargarán los videos pendientes mediante JS -->
+      </div>
+    </section>
+
+    <section id="comments" class="admin-section">
+      <h2>Comentarios Reportados</h2>
+      <div class="admin-list">
+        <div class="comment-card">
+          <div class="comment-content">
+            <p><strong>@user_anon:</strong> "Este video es falso."</p>
+            <p class="comment-meta">En: <a href="#">"Cómo aprender HTML"</a> | Reportes: 3</p>
+          </div>
+          <div class="admin-actions">
+            <button class="delete-btn">Eliminar</button>
+            <button class="ignore-btn">Ignorar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="users" class="admin-section">
+      <h2>Usuarios Registrados</h2>
+      <div class="admin-table">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol Actual</th>
+              <th>Cambiar Rol</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>@admin</td>
+              <td>admin@flixy.com</td>
+              <td>Administrador</td>
+              <td>
+                <select class="role-select">
+                  <option value="admin">Administrador</option>
+                  <option value="mod">Moderador</option>
+                  <option value="user">Usuario</option>
+                </select>
+              </td>
+              <td>
+                <button class="delete-user-btn" data-user-id="1">🗑️ Eliminar</button>
+              </td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>@user_normal</td>
+              <td>user@example.com</td>
+              <td>Usuario</td>
+              <td>
+                <select class="role-select">
+                  <option value="admin">Administrador</option>
+                  <option value="mod">Moderador</option>
+                  <option value="user" selected>Usuario</option>
+                </select>
+              </td>
+              <td>
+                <button class="delete-user-btn" data-user-id="2">🗑️ Eliminar</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    
+  </script>
+</body>
+</html>

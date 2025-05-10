@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
           console.error("HLS no soportado en este navegador.");
         }
       })
+      
       .catch(error => {
         console.error("Error al cargar el video:", error);
       });

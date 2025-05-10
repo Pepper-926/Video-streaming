@@ -109,12 +109,12 @@ class VideosView(View):
             revisado_param = request.GET.get('revisado')
 
             if revisado_param is not None:
-                if request.user.id_rol.rol == 'admin': #valida que el admin solo pueda acceder a estos videos
+                #if request.user.id_rol.rol == 'admin': #valida que el admin solo pueda acceder a estos videos
                 # Convertir el string a booleano
-                    revisado = revisado_param.lower() == 'true'
-                    videos_query = Videos.objects.filter(revisado=revisado)
-                else:
-                    return JsonResponse({'ok':False,'message':'Solo un usuario administrador tiene acceso a este endpoint.'})
+                revisado = revisado_param.lower() == 'true'
+                videos_query = Videos.objects.filter(revisado=revisado)
+                #else:
+                #    return JsonResponse({'ok':False,'message':'Solo un usuario administrador tiene acceso a este endpoint.'})
             else:
                 # Solo videos públicos si no se especifica el filtro revisado
                 videos_query = Videos.objects.filter(publico=True)
@@ -145,6 +145,7 @@ class VideosView(View):
 
             return JsonResponse({'videos': data}, status=200)
         except Exception as e:
+            print(e)
             return JsonResponse({'error': str(e)}, status=500)
     
     @transaction.atomic
