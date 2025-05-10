@@ -36,6 +36,7 @@ SELECT
 	v.descripcion,
 	v.fecha_publicado,
 	v.miniatura,
+	v.revisado,
 	c.nombre_canal,
 	u.foto_perfil,
 	count(DISTINCT s.seguidor) as seguidores,
@@ -62,5 +63,6 @@ GROUP BY
 	v.descripcion,
 	v.fecha_publicado,
 	v.miniatura,
+	v.revisado,
 	c.nombre_canal,
 	u.foto_perfil

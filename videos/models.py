@@ -32,6 +32,7 @@ class VwDetalleVideo(models.Model):
     calificacion = models.DecimalField(max_digits=2, decimal_places=1)
     titulo = models.CharField(max_length=30)
     descripcion = models.TextField()
+    revisado = models.BooleanField()
     publico = models.BooleanField()
     token_acceso_privado = models.CharField()
     fecha_publicado = models.DateTimeField()

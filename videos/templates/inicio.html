@@ -19,16 +19,23 @@
       <button>Buscar</button>
     </div>
     <div class="user-actions">
+      {% if permisos %}
+      <div class="top-bar">
+        <a href="/paneladmin">
+          <img src="{% static 'videos/img/admin.svg' %}" alt="Perfil">
+       </a>
+      </div>
+      {% endif %}
       <div class="top-bar">
         <a href="/videos/upload">
           <img src="{% static 'videos/img/subir.png' %}" alt="Perfil">
         </a>
       </div>
-        <div class="top-bar">
-          <a href="notis.html">
-            <img src="{% static 'videos/img/notis.png' %}" alt="Perfil">
-          </a>
-        </div>
+      <div class="top-bar">
+        <a href="notis.html">
+          <img src="{% static 'videos/img/notis.png' %}" alt="Perfil">
+        </a>
+      </div>
       <div class="top-bar">
         <a href="perfil.html">
           <img src="{% static 'videos/img/perfil.png' %}" alt="Perfil">

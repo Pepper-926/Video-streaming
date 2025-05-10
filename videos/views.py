@@ -26,8 +26,11 @@ from django.views.decorators.csrf import csrf_exempt #para pruebas
 '''
 Views que devuelven HTMLs
 '''
+@intentar_verificar_token
 def index(request):
-    return render(request, 'inicio.html')
+    return render(request, 'inicio.html', {
+        'permisos': True if request.usuario and request.usuario.id_rol.rol == 'admin' else None
+    })
 
 @verificar_token
 def form_video(request):
@@ -43,19 +46,19 @@ def confirmar_subida(request, video_id):
 @intentar_verificar_token
 def ver_video(request, video_id):
     video = get_object_or_404(VwDetalleVideo, id_video=video_id)
+    if not video.revisado:
+        return JsonResponse({
+            'ok': False,
+            'message': 'El video aun no ha sido revisado por un administrador.',
+        }, status=403)
+    
     token_privado = request.GET.get('token')
-    fecha_local = video.fecha_publicado + timedelta(hours=-6) 
-
+    
     # Validación de visibilidad del video
     if not video.publico and token_privado != video.token_acceso_privado:
-        return JsonResponse({'ok': False, 'message': 'Acceso no autorizado.'}, status=403)
-
-    # Aquí se podría añadir la validación de revisión si se activa en el futuro
-    # if not video.revisado:
-    #     return JsonResponse({
-    #         'ok': False,
-    #         'message': 'El video no ha sido revisado por un administrador.'
-    #     }, status=403)
+        return JsonResponse({'ok': False, 'message': 'Acceso no autorizado. El video es privado.'}, status=403)
+    
+    fecha_local = video.fecha_publicado + timedelta(hours=-6) 
 
     #Aqui se hace un conteo en la tabla historial para manejar el historial de cada usuario y cuantas visualizacion tiene cada video. SOLO SE CUENTA SI EL USUARIO ESTA AUTENTICADO. Tambien se hacen otras comprobaciones en caso de que este autenticado el usuario.
 
@@ -94,14 +97,12 @@ def ver_video(request, video_id):
                     'fecha_video': fecha_local
                     })
 
-
-
-
 '''
 Esta es la api /videos
 '''
 #Vista de /videos
 @method_decorator(verificar_token, name='post')
+@method_decorator(intentar_verificar_token, name='get')
 class VideosView(View):
     def get(self, request):
         try:
@@ -109,17 +110,15 @@ class VideosView(View):
             revisado_param = request.GET.get('revisado')
 
             if revisado_param is not None:
-                #if request.user.id_rol.rol == 'admin': #valida que el admin solo pueda acceder a estos videos
-                # Convertir el string a booleano
-                revisado = revisado_param.lower() == 'true'
-                videos_query = Videos.objects.filter(revisado=revisado)
-                #else:
-                #    return JsonResponse({'ok':False,'message':'Solo un usuario administrador tiene acceso a este endpoint.'})
+                if request.usuario and request.usuario.id_rol.rol == 'admin':#Protegemos el endpoint para que solo un administrador pueda obtener estos videos no revisados.
+                    revisado = revisado_param.lower() == 'true'
+                    videos_query = Videos.objects.filter(revisado=revisado)
+                else:
+                    return JsonResponse({'ok':False,'message':'Solo un usuario administrador tiene acceso a este endpoint.'})
             else:
                 # Solo videos públicos si no se especifica el filtro revisado
-                videos_query = Videos.objects.filter(publico=True)
+                videos_query = Videos.objects.filter(publico=True, revisado=True)
 
-            # Canal público solo (no depende de revisado)
             canal_map = {
                 c.id_video: c for c in VistaCanalDeVideo.objects.filter(publico=True)
             }
