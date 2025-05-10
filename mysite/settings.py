@@ -56,6 +56,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -162,3 +163,11 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'tu_correo@dominio.com'
 EMAIL_HOST_PASSWORD = 'tu_contraseña'
+
+#Configuracion de reloj del backend
+USE_TZ = True
+TIME_ZONE = 'America/Mexico_City'
+
+#Configuaracion de idioma
+LANGUAGE_CODE = 'es-mx'
+USE_L10N = True

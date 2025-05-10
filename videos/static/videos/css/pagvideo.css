@@ -573,3 +573,79 @@
   .respuesta-content p {
     margin: 5px 0;
   }
+
+  /*hover de etiquetas*/
+  .etiqueta-tooltip {
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .etiqueta-tooltip .tooltip {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #333;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    margin-top: 5px;
+    z-index: 10;
+  }
+
+  .etiqueta-tooltip .tooltip {
+    max-width: 200px;
+    overflow-wrap: break-word;
+    white-space: normal; /* permite saltos de línea */
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .etiqueta-tooltip:hover .tooltip {
+    display: block;
+  }
+  
+  /*css boton de like*/
+  .fas {
+    background-color: white;
+    border: 50px;
+    border-radius: 50%;
+    width: 30px;
+  }
+
+  /*css foto de perfil*/
+  #foto-perfil {
+    width: 60px;
+  }
+
+  /*css boton login*/
+  #btn-login {
+    color: white;
+    background-color: rgb(14, 104, 172);
+    border: solid rgb(17, 81, 129) 4px;
+    text-decoration: none;
+    padding: 7px;
+  }
+
+  #btn-login:hover {
+    background-color: rgb(17, 81, 129);
+    border: solid rgb(17, 66, 104) 4px;
+  }
+
+  /*css del logo*/
+  #logo {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gray-text);
+  text-shadow: 1px 1px 2px rgb(146, 146, 146);
+  letter-spacing: 0.5px;
+  transition: transform var(--transition-speed) ease;
+  text-decoration: none;
+}
+
+#logo:hover {
+  transform: scale(1.05);
+}

@@ -5,8 +5,10 @@ from django.views import View
 from django.http import JsonResponse
 from videos.models import Videos
 from usuarios.models import Usuarios
+from services.s3_storage import S3Manager
 from .models import Comentarios
 from .decoradores import verificar_token, intentar_verificar_token
+from .utils import ajustar_hora
 
 # Create your views here.
 """
@@ -18,6 +20,7 @@ Esta es la API /comentarios
 class ViewComentarios(View):
     def get(self, request):
         try:
+            s3 = S3Manager()
             video_id = request.GET.get('video_id')
 
             if not video_id:
@@ -29,18 +32,18 @@ class ViewComentarios(View):
                 {
                     'id_comentario': c.id_comentario,
                     'texto': c.texto,
-                    'fecha': c.fecha_comentado.strftime('%Y-%m-%d %H:%M'),
+                    'fecha': ajustar_hora(c.fecha_comentado),
                     'usuario': c.id_usuario.nombre,
                     'id_usuario': c.id_usuario.id_usuario,
-                    'foto_perfil': c.id_usuario.foto_perfil,
+                    'foto_perfil': s3.get_object_auto_mime(c.id_usuario.foto_perfil),
                     'respuestas': [
                         {
                             'id_comentario': r.id_comentario,
                             'texto': r.texto,
-                            'fecha': r.fecha_comentado.strftime('%Y-%m-%d %H:%M'),
+                            'fecha': ajustar_hora(c.fecha_comentado),
                             'usuario': r.id_usuario.nombre,
                             'id_usuario': r.id_usuario.id_usuario,
-                            'foto_perfil': r.id_usuario.foto_perfil,
+                            'foto_perfil': s3.get_object_auto_mime(r.id_usuario.foto_perfil),
                         }
                         for r in Comentarios.objects.filter(id_respuesta=c.id_comentario).order_by('-fecha_comentado') 
                     ]
@@ -49,7 +52,8 @@ class ViewComentarios(View):
             ]
 
             return JsonResponse({'comentarios': data,
-                                 'tu_id': request.usuario.id_usuario if request.usuario else None}, status=200)
+                                 'tu_id': request.usuario.id_usuario if request.usuario else None,
+                                 'num_comentarios':Comentarios.objects.filter(id_video=video_id).count()}, status=200)
 
         except Exception as e:
             print("Error al obtener comentarios:", str(e))
@@ -62,19 +66,25 @@ class ViewComentarios(View):
             id_video = data.get("id_video")
             text = data.get("contenido")
             id_usuario = request.usuario.id_usuario
-            id_respuesta = data.get("id_respuesta")
-            Comentarios.objects.create(
-                texto = text,
-                id_video = Videos.objects.get(id_video=id_video),
-                id_usuario = Usuarios.objects.get(id_usuario=id_usuario),
-                id_respuesta = Comentarios.objects.get(id_comentario=id_respuesta)
+            id_respuesta = data.get("id_respuesta")  # Puede ser None
+
+            nuevo_comentario = Comentarios(
+                texto=text,
+                id_video=Videos.objects.get(id_video=id_video),
+                id_usuario=Usuarios.objects.get(id_usuario=id_usuario)
             )
+
+            if id_respuesta:  # Solo si viene en la petición
+                nuevo_comentario.id_respuesta = Comentarios.objects.get(id_comentario=id_respuesta)
+
+            nuevo_comentario.save()
 
             return JsonResponse({"mensaje": "Datos recibidos correctamente"}, status=200)
 
         except Exception as e:
             print("Error al procesar comentario:", str(e))
             return JsonResponse({"error": str(e)}, status=400)
+
         
     def delete(self, request):
         try:
