@@ -1,3 +1,4 @@
+import os
 import secrets
 import datetime
 from django.shortcuts import render, redirect
@@ -7,9 +8,11 @@ from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
 from django.utils import timezone
+from django.db import transaction
 from videos.decoradores import verificar_token
 from usuarios.models import Usuarios, Roles, Canales, PasswordResetToken, Seguidores
 from videos.models import Videos
+from services.s3_storage import S3Manager
 from .utils import generar_token, generar_hash
 
 from django.views.decorators.csrf import csrf_exempt #para pruebas
@@ -120,12 +123,10 @@ def registrar_usuario(request):
         foto_perfil = request.FILES.get('foto_perfil')
         terminos = request.POST.get('terminos')
 
-        #Verificacion de canal existente
-        if Canales.objects.filter(nombre_canal = nombre_canal).exists():
+        # Validaciones
+        if Canales.objects.filter(nombre_canal=nombre_canal).exists():
             return render(request, 'registro.html', {'error': 'El nombre de canal ya está en uso.'})
-        print('validó canal')
 
-        # Validación de edad mínima (13 años)
         try:
             fecha_nacimiento = datetime.datetime.strptime(nacimiento, '%Y-%m-%d')
             hoy = datetime.datetime.today()
@@ -133,66 +134,67 @@ def registrar_usuario(request):
             if edad < 13:
                 return render(request, 'registro.html', {'error': 'Debes tener al menos 13 años para registrarte'})
         except ValueError:
-            return render(request, 'registro.html', {'error': 'Fecha de nacimiento inválida. Asegúrate de usar un formato correcto (DD/MM/YYYY).'})
-        
-         # Verifica si el correo ya existe
+            return render(request, 'registro.html', {'error': 'Fecha de nacimiento inválida. Usa formato YYYY-MM-DD.'})
+
         if Usuarios.objects.filter(correo=correo).exists():
             return render(request, 'registro.html', {'error': 'El correo electrónico ya está registrado.'})
-        print('validó correo')
 
-        # Verificación de contraseña
         if contra != confirmar_contra:
             return render(request, 'registro.html', {'error': 'Las contraseñas no coinciden.'})
-        print('validó contra')
 
         if not terminos:
             return render(request, 'registro.html', {'error': 'Debes aceptar los términos y condiciones.'})
 
-
-        # Obtener el rol "Usuario"
+        # Obtener rol
         try:
             rol = Roles.objects.get(id_rol=2)
         except Roles.DoesNotExist:
-            return render(request, 'registro.html', {'error': 'No se pudo asignar el rol de usuario. Intenta de nuevo.'})
-        
-        # Generar el hash de la contraseña
+            return render(request, 'registro.html', {'error': 'No se pudo asignar el rol de usuario.'})
+
         contra_hash = generar_hash(contra)
 
-        # Guardar el usuario y canal
-        nuevo_usuario = Usuarios(
-            nombre=nombre,
-            a_pat=a_pat,
-            a_mat=a_mat,
-            nacimiento=nacimiento,
-            correo=correo,
-            contra=contra_hash, 
-            foto_perfil=foto_perfil.name if foto_perfil else None,
-            id_rol=rol
-        )
+        try:
+            with transaction.atomic():
+                # Crear usuario sin foto
+                nuevo_usuario = Usuarios.objects.create(
+                    nombre=nombre,
+                    a_pat=a_pat,
+                    a_mat=a_mat,
+                    nacimiento=nacimiento,
+                    correo=correo,
+                    contra=contra_hash,
+                    foto_perfil='',
+                    id_rol=rol
+                )
 
-        nuevo_usuario.save()
-        
-        nuevo_canal = Canales(
-            nombre_canal = nombre_canal,
-            id_usuario = nuevo_usuario
-        )
-        
-        print(f"Datos recibidos: {nuevo_usuario.nombre}, {nuevo_canal.nombre_canal}, {correo}")
+                # Crear canal
+                nuevo_canal = Canales.objects.create(
+                    nombre_canal=nombre_canal,
+                    id_usuario=nuevo_usuario
+                )
 
-        nuevo_canal.save()
+        except Exception as e:
+            print("Error durante transacción:", e)
+            return render(request, 'registro.html', {'error': 'Error interno. Intenta más tarde.'})
 
-        token = generar_token(nuevo_usuario)
+        # Ahora subir a S3 y actualizar ruta
+        s3 = S3Manager()
+        if foto_perfil:
+            try:
+                ruta_foto = s3.subir_foto_perfil(foto_perfil, nuevo_usuario.id_usuario)
+            except Exception as e:
+                print("Error al subir foto de perfil a S3:", e)
+                ruta_foto = 'perfiles/fotos_de_perfil/avatar-defecto.svg'
+        else:
+            print('no se recibio una foto')
+            ruta_foto = 'perfiles/fotos_de_perfil/avatar-defecto.svg'
 
-        response = redirect('login')
-        '''
-        response.set_cookie(
-                key='jwt',
-                value=token,
-                httponly=True,
-                max_age=3600
-            )
-        '''
-        return response
+        # Actualizar campo foto fuera de la transacción
+        nuevo_usuario.foto_perfil = ruta_foto
+        nuevo_usuario.save(update_fields=['foto_perfil'])
+
+        return redirect('login')
+
     return render(request, 'registro.html')
 
 def logout(request):
