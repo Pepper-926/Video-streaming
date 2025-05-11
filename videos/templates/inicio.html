@@ -14,10 +14,10 @@
 
   <header class="header">
     <div class="logo">Flixy</div>
-    <div class="search-bar">
-      <input type="text" placeholder="Buscar videos...">
-      <button>Buscar</button>
-    </div>
+    <form class="search-bar" id="form-busqueda">
+      {{ search_form.q }}
+      <button type="submit">Buscar</button>
+    </form>
     <div class="user-actions">
       {% if permisos %}
       <div class="top-bar">
@@ -37,7 +37,7 @@
         </a>
       </div>
       <div class="top-bar">
-        <a href="perfil.html">
+        <a href="/login/"></a>
           <img src="{% static 'videos/img/perfil.png' %}" alt="Perfil">
        </a>
       </div>
@@ -60,17 +60,9 @@
   <!-- Área principal  -->
 
   <main class="content">
-    <section class="video-grid">
-      <div class="video-card">
-        <a href="pagvideo.html"><img src="img/cloud.png" alt="Video 1"></a>
-        <h3>Cloud Development</h3>
-        <p>CodingCloud • 100k vistas • Hace 2 días</p>
-      </div>
-      <div class="video-card">
-        <a href="pagvideo.html"><img src="img/backed.jpg" alt="Video 2"></a>
-        <h3>Backend Development</h3>
-        <p>BackCoding • 50k vistas • Hace 1 semana</p>
-      </div>
+    <section class="video-section">
+      <div id="search-message"></div>
+      <div class="video-grid"></div>
     </section>
   </main>
 
@@ -79,4 +71,6 @@
   </footer>
 
 </body>
+<script src="{% static 'videos/js/inicio.js' %}"></script>
+<script src="{% static 'videos/js/filtro_videos.js' %}"></script>
 </html>

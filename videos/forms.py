@@ -13,3 +13,15 @@ class VideoUploadForm(forms.Form):
         widget=forms.CheckboxSelectMultiple,
         required=False
     )
+
+class SearchForm(forms.Form):
+    q = forms.CharField(
+        required=True,
+        label='',
+        widget=forms.TextInput(attrs={
+            'id': 'busqueda',
+            'name': 'q',
+            'placeholder': 'Buscar videos...',
+            'required': True,
+        })
+    )
