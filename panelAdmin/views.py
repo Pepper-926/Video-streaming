@@ -10,9 +10,12 @@ import json
 from services.s3_storage import S3Manager
 from django.db import transaction
 
-
+@verificar_token
 def panel_admin(request):
-    return render(request, 'paneladmin.html')
+    if request.usuario and request.usuario.id_rol.rol == 'admin': #Proteccion para que solo un admin pueda acceder a la vista
+        return render(request, 'paneladmin.html')
+    else:
+        return redirect('/')
 
 @verificar_token
 def approve_video(request, video_id):

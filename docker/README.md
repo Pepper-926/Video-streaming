@@ -19,4 +19,6 @@ Contar con un archivo .env ubicado en la raíz del proyecto, el cual debe conten
 
 ```bash
 .\docker\Scripts\activate_env.ps1
+
+./docker/Scripts/activate_env.sh
 ```

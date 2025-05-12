@@ -229,3 +229,37 @@ class S3Manager:
             ExpiresIn=expires_in
         )
         return url
+
+    def subir_foto_perfil(self, archivo, id_usuario):
+        """
+        Sube la foto de perfil de un usuario a S3 bajo la ruta:
+        perfiles/fotos_de_perfil/foto_perfil<ID>.<extensión>
+
+        Args:
+            archivo (InMemoryUploadedFile): Archivo recibido desde el formulario.
+            id_usuario (int): ID del usuario recién creado.
+
+        Returns:
+            str: Ruta en S3 donde se guardó el archivo.
+        """
+        try:
+            import os
+            import mimetypes
+
+            extension = os.path.splitext(archivo.name)[1] or '.jpg'
+            ruta_s3 = f'perfiles/fotos_de_perfil/foto_perfil{id_usuario}{extension}'
+            content_type, _ = mimetypes.guess_type(archivo.name)
+            if not content_type:
+                content_type = 'application/octet-stream'
+
+            # Subir el archivo
+            self.s3.upload_fileobj(
+                Fileobj=archivo,
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Key=ruta_s3,
+                ExtraArgs={'ContentType': content_type}
+            )
+
+            return ruta_s3
+        except Exception as e:
+            raise Exception(f"Error al subir foto de perfil: {str(e)}")

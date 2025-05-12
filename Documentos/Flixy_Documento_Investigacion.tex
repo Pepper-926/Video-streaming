@@ -1,0 +1,124 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+
+\geometry{a4paper, margin=2.5cm}
+\titleformat{\section}[block]{\bfseries\Large}{}{0pt}{}
+\titleformat{\subsection}[block]{\bfseries\large}{}{0pt}{}
+
+\title{Flixy: Plataforma de Video Streaming Educativo}
+\author{Gabriel García Cortés, Anette Ruiz Saucedo, Daniel Alejandro Alvarez Mata \\
+\small Profesora: Diana Lourdes Ávila Molina \\
+\small Ingeniería de Software – 4to semestre \\
+\small 11 de mayo de 2025}
+\date{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Flixy}
+\lhead{Ingeniería de Software}
+\cfoot{\thepage}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Resumen Ejecutivo}
+El proyecto consiste en una plataforma de videos educativos enfocada en tecnología, programación y desarrollo de software. Permite a los usuarios subir, visualizar y comentar videos, así como calificarlos y filtrarlos según sus intereses. Cuenta con un sistema de moderación de contenido, reproductor integrado y autenticación segura. Su propósito es facilitar el aprendizaje tecnológico y fomentar la interacción entre una comunidad de estudiantes, desarrolladores y entusiastas del software.
+
+\section{Definición del Problema}
+La plataforma resuelve el problema del acceso limitado a contenido educativo especializado en tecnología y programación, al centralizar recursos audiovisuales de calidad y permitir que los usuarios aprendan de forma interactiva. También aborda la falta de espacios seguros para compartir conocimientos mediante un sistema de moderación y roles de usuario, promoviendo así una comunidad colaborativa y confiable para el aprendizaje digital.
+
+\section{Justificación}
+Es necesario resolver este problema porque la demanda de habilidades tecnológicas crece constantemente y muchas personas no tienen acceso a educación de calidad en este campo. Los métodos tradicionales suelen ser poco dinámicos o inaccesibles, y la falta de una plataforma centralizada dificulta encontrar contenido confiable y actualizado. Además, el aprendizaje efectivo requiere interacción y retroalimentación, algo que muchas plataformas no ofrecen.
+
+\section{Usuarios Objetivo}
+\begin{itemize}
+  \item \textbf{Usuarios generales:} Personas interesadas en aprender sobre tecnología y programación mediante videos educativos.
+  \item \textbf{Creadores de contenido:} Usuarios con permisos para subir videos educativos, agregar descripciones y configurar su visibilidad.
+  \item \textbf{Administradores:} Encargados de revisar, aprobar o rechazar contenido (videos y comentarios).
+\end{itemize}
+
+\section{Objetivos}
+\begin{enumerate}
+  \item Facilitar el acceso a contenido educativo de calidad en formato audiovisual sobre temas tecnológicos.
+  \item Fomentar la creación de comunidad y la interacción entre usuarios a través de comentarios y calificaciones.
+  \item Garantizar la seguridad y fiabilidad de la información y los servicios ofrecidos.
+  \item Proveer búsqueda eficiente y filtrado avanzado de contenido.
+\end{enumerate}
+
+\section{Requisitos Funcionales y No Funcionales}
+\subsection*{Requisitos Funcionales}
+\begin{itemize}[leftmargin=*]
+  \item Gestión de usuarios (registro, inicio de sesión, recuperación de contraseña, roles).
+  \item Subida de videos con título, descripción, etiquetas, visibilidad.
+  \item Visualización con reproductor integrado y recomendados.
+  \item Comentarios y calificaciones con moderación.
+  \item Búsqueda avanzada por filtros y palabras clave.
+  \item Moderación de contenido por parte de administradores.
+\end{itemize}
+
+\subsection*{Requisitos No Funcionales}
+\begin{itemize}[leftmargin=*]
+  \item Rendimiento ágil y concurrencia.
+  \item Escalabilidad.
+  \item Seguridad: HTTPS, protección contra ataques, gestión de sesiones.
+  \item Usabilidad y diseño responsivo.
+  \item Mantenibilidad del código.
+  \item Alta disponibilidad y respaldos periódicos.
+\end{itemize}
+
+\section{Casos de Uso Principales}
+\begin{itemize}
+  \item Registrarse / Iniciar sesión
+  \item Visualizar videos
+  \item Comentar y calificar
+  \item Subir video
+  \item Búsqueda avanzada
+  \item Moderación de contenido
+\end{itemize}
+
+\section{Tecnologías Utilizadas}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Backend:} Django 5.2
+  \item \textbf{Frontend:} No especificado
+  \item \textbf{Base de datos:} PostgreSQL
+  \item \textbf{Almacenamiento de archivos:} Amazon S3
+  \item \textbf{Servidor web:} Gunicorn
+  \item \textbf{Entorno de desarrollo:} Docker (no en producción)
+\end{itemize}
+
+\section{Consideraciones de Seguridad}
+\begin{itemize}[leftmargin=*]
+  \item Autenticación mediante JWT
+  \item CSRF tokens activos
+  \item Protección contra XSS e inyección SQL con mecanismos de Django
+  \item HTTPS obligatorio en producción
+\end{itemize}
+
+\section{Pruebas y Evaluación}
+Se han realizado pruebas en el flujo completo de uso: registro, login, subida de videos, visualización (tras aprobación), y comentarios (solo si está logueado). Aún falta implementar la búsqueda avanzada y la moderación de comentarios.
+
+El sistema será considerado listo cuando todos los casos de uso funcionen correctamente en su mejor y peor escenario.
+
+\section{Distribución del Trabajo}
+\begin{itemize}
+  \item Gabriel García Cortés – Base de datos
+  \item Anette Ruiz Saucedo – Backend
+  \item Daniel Álvarez Mata – Frontend
+\end{itemize}
+
+\section{Reflexión Final}
+Como equipo, hemos aprendido a trabajar colaborativamente y aplicar buenas prácticas de documentación, planificación, desarrollo y seguridad. Los principales retos fueron definir el alcance realista, elegir tecnologías adecuadas, coordinar el trabajo y equilibrar experiencia de usuario con seguridad.
+
+Si comenzáramos de nuevo, dedicaríamos más tiempo a la planificación, usaríamos una mejor estructura de carpetas desde el inicio y profundizaríamos en herramientas como Docker y conceptos como WSGI/ASGI.
+
+\end{document}

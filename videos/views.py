@@ -4,6 +4,7 @@ import shutil  # Para eliminar directorios completos
 from datetime import timedelta
 from django.conf import settings  # Para obtener el MEDIA_PATH
 from django.db import transaction
+from django.db.models import Q
 from django.http import JsonResponse, Http404, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.crypto import get_random_string
@@ -11,7 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_GET, require_POST
 from .decoradores import verificar_token, intentar_verificar_token
-from .forms import VideoUploadForm  # Obtener form que se devuelve al cliente
+from .forms import VideoUploadForm, SearchForm # Obtener form que se devuelve al cliente
 from .models import Videos, EtiquetasDeVideos, VistaCanalDeVideo, Historial, VwDetalleVideo, Etiquetas, LikesDislikesVideos
 from .querys import asociar_etiquetas
 from .tasks import convertir_video_a_hls
@@ -26,8 +27,13 @@ from django.views.decorators.csrf import csrf_exempt #para pruebas
 '''
 Views que devuelven HTMLs
 '''
+@intentar_verificar_token
 def index(request):
-    return render(request, 'inicio.html')
+    form = SearchForm()
+    return render(request, 'inicio.html', {
+        'permisos': True if request.usuario and request.usuario.id_rol.rol == 'admin' else None,
+        'search_form': form
+    })
 
 @verificar_token
 def form_video(request):
@@ -43,19 +49,19 @@ def confirmar_subida(request, video_id):
 @intentar_verificar_token
 def ver_video(request, video_id):
     video = get_object_or_404(VwDetalleVideo, id_video=video_id)
+    if not video.revisado:
+        return JsonResponse({
+            'ok': False,
+            'message': 'El video aun no ha sido revisado por un administrador.',
+        }, status=403)
+    
     token_privado = request.GET.get('token')
-    fecha_local = video.fecha_publicado + timedelta(hours=-6) 
-
+    
     # Validación de visibilidad del video
     if not video.publico and token_privado != video.token_acceso_privado:
-        return JsonResponse({'ok': False, 'message': 'Acceso no autorizado.'}, status=403)
-
-    # Aquí se podría añadir la validación de revisión si se activa en el futuro
-    # if not video.revisado:
-    #     return JsonResponse({
-    #         'ok': False,
-    #         'message': 'El video no ha sido revisado por un administrador.'
-    #     }, status=403)
+        return JsonResponse({'ok': False, 'message': 'Acceso no autorizado. El video es privado.'}, status=403)
+    
+    fecha_local = video.fecha_publicado + timedelta(hours=-6) 
 
     #Aqui se hace un conteo en la tabla historial para manejar el historial de cada usuario y cuantas visualizacion tiene cada video. SOLO SE CUENTA SI EL USUARIO ESTA AUTENTICADO. Tambien se hacen otras comprobaciones en caso de que este autenticado el usuario.
 
@@ -94,41 +100,54 @@ def ver_video(request, video_id):
                     'fecha_video': fecha_local
                     })
 
-
-
-
 '''
 Esta es la api /videos
 '''
 #Vista de /videos
 @method_decorator(verificar_token, name='post')
+@method_decorator(intentar_verificar_token, name='get')
 class VideosView(View):
     def get(self, request):
         try:
             s3 = S3Manager()
-            revisado_param = request.GET.get('revisado')
 
-            if revisado_param is not None:
-                #if request.user.id_rol.rol == 'admin': #valida que el admin solo pueda acceder a estos videos
-                # Convertir el string a booleano
-                revisado = revisado_param.lower() == 'true'
-                videos_query = Videos.objects.filter(revisado=revisado)
-                #else:
-                #    return JsonResponse({'ok':False,'message':'Solo un usuario administrador tiene acceso a este endpoint.'})
+            # Filtros booleanos opcionales
+            filtros = {}
+            booleanos = ['revisado', 'publico', 'estado', 'conversion_completa']
+            for campo in booleanos:
+                valor = request.GET.get(campo)
+                if valor is not None:
+                    filtros[campo] = valor.lower() == 'true'
+
+            # Verificación de acceso si se pide filtrado restringido
+            if any(k in filtros for k in ['revisado', 'publico', 'estado']):
+                if not (request.usuario and request.usuario.id_rol.rol == 'admin'):
+                    return JsonResponse({'ok': False, 'message': 'Solo un administrador puede aplicar estos filtros.'}, status=403)
+            
+            # Filtro base según el rol
+            if request.usuario and request.usuario.id_rol.rol == 'admin':
+                videos_query = Videos.objects.filter(**filtros)
             else:
-                # Solo videos públicos si no se especifica el filtro revisado
-                videos_query = Videos.objects.filter(publico=True)
+                filtros.setdefault('publico', True)
+                filtros.setdefault('revisado', True)
+                videos_query = Videos.objects.filter(**filtros)
 
-            # Canal público solo (no depende de revisado)
+            # Filtro de búsqueda por 'titulo' (aplica a título, canal y descripción)
+            query = request.GET.get('titulo')
+            if query:
+                videos_query = videos_query.filter(
+                    Q(titulo__icontains=query) |
+                    Q(id_canal__nombre_canal__icontains=query) |
+                    Q(descripcion__icontains=query)
+                )
+
             canal_map = {
                 c.id_video: c for c in VistaCanalDeVideo.objects.filter(publico=True)
             }
 
             data = []
-
             for v in videos_query:
                 canal_info = canal_map.get(v.id_video)
-
                 data.append({
                     'id_video': v.id_video,
                     'titulo': v.titulo,
@@ -144,6 +163,7 @@ class VideosView(View):
                 })
 
             return JsonResponse({'videos': data}, status=200)
+
         except Exception as e:
             print(e)
             return JsonResponse({'error': str(e)}, status=500)

@@ -7,4 +7,5 @@ urlpatterns  = [
     path('login/', views.login, name = 'login'),
     path('recuperar/', views.solicitar_recuperacion, name='solicitar_recuperacion'),
     path('recuperar/<str:token>/', views.cambiar_contrasena, name='cambiar_contrasena'),
+    path('usuarios/seguir-autor-por-video/<int:video_id>/', views.SeguirPorVideo.as_view(), name='SeguirPorVideo'),
 ]

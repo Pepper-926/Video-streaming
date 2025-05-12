@@ -49,3 +49,26 @@ class PasswordResetToken(models.Model):
     class Meta:
         managed = False
         db_table = 'canales'
+
+class Seguidores(models.Model):
+    id = models.AutoField(primary_key=True)
+    usuario = models.ForeignKey(
+        'Usuarios',
+        related_name='siguiendo_a',
+        on_delete=models.CASCADE,
+        db_column='id_usuario'
+    )
+    seguidor = models.ForeignKey(
+        'Usuarios',
+        related_name='seguido_por',
+        on_delete=models.CASCADE,
+        db_column='seguidor'
+    )
+
+    class Meta:
+        managed = False
+        unique_together = (('usuario', 'seguidor'),)
+        db_table = 'seguidores'
+
+    def __str__(self):
+        return f'{self.seguidor} sigue a {self.usuario}'
