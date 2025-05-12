@@ -141,7 +141,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/home/ubuntu/Desktop/proyectos/flixy/static'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
   # Ojo que esto es diferente de STATICFILES_DIRS
 
 # Default primary key field type
