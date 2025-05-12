@@ -1,11 +1,14 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, get_object_or_404
 from videos.decoradores import verificar_token
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
-from django.views import View
 from videos.decoradores import verificar_token
 from videos.models import Videos
 from usuarios.models import Usuarios, Roles
+from videos.models import Canales,Historial, Seguidores, LikesDislikesVideos, VideosEtiquetas, Comentarios
+from django.core.paginator import Paginator
+import json
+from services.s3_storage import S3Manager
+from django.db import transaction
 
 
 def panel_admin(request):
@@ -26,44 +29,126 @@ def approve_video(request, video_id):
         return JsonResponse({'success': True, 'message': 'Video aprobado.'})
 
     except Videos.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Video no encontrado.'})
+        return JsonResponse({'success': False, 'message': 'Video no encontrado.'}) 
+    
+@verificar_token
+def eliminar_usuario_y_canal(request, usuario_id):
+    if request.usuario.id_rol.id_rol != 1:  # Solo si es admin
+        return JsonResponse({'success': False, 'message': 'Acción no permitida.'})
 
+    try:
+        with transaction.atomic():
+            # Obtener al usuario
+            usuario = get_object_or_404(Usuarios, id_usuario=usuario_id)
+            canal = get_object_or_404(Canales, id_usuario=usuario)
+
+            # Eliminar historial
+            Historial.objects.filter(usuario=usuario).delete()
+
+            # Eliminar seguidores
+            Seguidores.objects.filter(usuario=usuario).delete()
+
+            # Eliminar videos y todo lo relacionado
+            videos = Videos.objects.filter(canal=canal)
+            for video in videos:
+                LikesDislikesVideos.objects.filter(video=video).delete()
+                VideosEtiquetas.objects.filter(video=video).delete()
+                Comentarios.objects.filter(video=video).delete()
+                video.delete()
+
+            # Eliminar canal
+            canal.delete()
+
+            # Eliminar usuario
+            usuario.delete()
+
+            return JsonResponse({'success': True, 'message': 'Usuario y canal eliminados correctamente.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+@verificar_token
+def eliminar_videos_usuario(request, usuario_id):
+    try:
+        # Obtener los videos del usuario
+        videos = Videos.objects.filter(canal__id_usuario=usuario_id)
+
+        # Crear instancia de S3Manager para manejar la eliminación en la nube
+        s3 = S3Manager()
+
+        # Eliminar cada video en la nube
+        for video in videos:
+            s3.delete_folder(f'videos/video{video.id_video}/')
+
+        return JsonResponse({'success': True, 'message': 'Videos eliminados de la nube.'})
+    
+    except Videos.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'No se encontraron videos para eliminar.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+    
 @verificar_token
 def cambiar_rol(request, usuario_id):
-    if request.usuario.id_rol.id_rol != 1:  
-        return redirect('/')
+    if request.usuario.id_rol.id_rol != 1:  # Solo si es admin
+        return JsonResponse({'success': False, 'message': 'Acción no permitida.'})
 
     try:
-        usuario = Usuarios.objects.get(id_usuario=usuario_id)
-        rol = Roles.objects.get(id_rol=request.POST['rol'])  
+        # Si el request es POST, entonces procesamos la información
+        if request.method == 'POST':
+            # Cargar el cuerpo de la solicitud como JSON
+            data = json.loads(request.body)  # Parsear el JSON del cuerpo de la solicitud
+            nuevo_rol = data.get('rol')  # Obtener el nuevo rol
+            print(nuevo_rol)
 
-        usuario.id_rol = rol
-        usuario.save()
+            # Obtener al usuario
+            usuario = Usuarios.objects.get(id_usuario=usuario_id)
 
-        return redirect('videos_pendientes') 
+            # Obtener el objeto 'Roles' basado en el nombre del rol
+            rol_obj = Roles.objects.get(rol=nuevo_rol)
+
+            # Asignar el nuevo rol al usuario
+            usuario.id_rol = rol_obj
+            usuario.save()
+
+            return JsonResponse({'success': True, 'message': 'Rol actualizado exitosamente.'})
+
+        else:
+            return JsonResponse({'success': False, 'message': 'Método no permitido.'})
 
     except Usuarios.DoesNotExist:
-        return redirect('videos_pendientes')  
+        return JsonResponse({'success': False, 'message': 'Usuario no encontrado.'})
+
     except Roles.DoesNotExist:
-        return redirect('videos_pendientes')  
+        return JsonResponse({'success': False, 'message': 'Rol no encontrado.'})
+
     
-def listar_usuarios(request):
-    usuarios = Usuarios.objects.all()
-
-    roles = Roles.objects.all()
-
-    return render(request, 'paneladmin.html', {'usuarios': usuarios, 'roles': roles})
-
 @verificar_token
-def eliminar_usuario(request, usuario_id):
-    if request.usuario.id_rol.id_rol != 1: 
-        return redirect('/')
+def obtener_usuarios(request):
+    # Obtener el número de página desde los parámetros GET, por defecto es la página 1
+    page_number = request.GET.get('page', 1)
+
+    # Recuperamos todos los usuarios
+    usuarios_list = Usuarios.objects.all()
+
+    # Crear un objeto Paginator que dividirá los usuarios en páginas
+    paginator = Paginator(usuarios_list, 3)  # 3 usuarios por página
 
     try:
-        usuario = Usuarios.objects.get(id_usuario=usuario_id)
+        # Obtener los usuarios de la página solicitada
+        usuarios = paginator.page(page_number)
+    except Exception as e:
+        # Si no se encuentra la página, se pueden manejar errores
+        return JsonResponse({'error': 'Página no válida'}, status=400)
 
-        usuario.delete()
+    # Crear la respuesta JSON con los usuarios
+    usuarios_data = []
+    for usuario in usuarios:
+        usuarios_data.append({
+            'id_usuario': usuario.id_usuario,
+            'nombre': usuario.nombre,
+            'correo': usuario.correo,
+            'rol': usuario.id_rol.rol,  # Asumiendo que el rol está relacionado
+        })
 
-        return redirect('videos_pendientes')  
-    except Usuarios.DoesNotExist:
-        return redirect('videos_pendientes')  
+    return JsonResponse({'usuarios': usuarios_data})
+

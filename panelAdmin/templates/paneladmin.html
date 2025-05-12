@@ -7,7 +7,9 @@
   <title>Flixy - Panel Admin</title>
   <link rel="stylesheet" href="{% static 'panel_admin/css/paneladmin.css' %}">
   <link rel="icon" type="image/x-icon" href="img/icon.png">
+  <script src="{% static 'panel_admin/js/paneladmin.js' %}"></script>
   <script src="{% static 'panel_admin/js/mostrar_videos.js' %}"></script>
+  <script src="{% static 'panel_admin/js/manejo_usuarios.js' %}"></script>
 </head>
 <body>
 
@@ -49,7 +51,7 @@
     <section id="users" class="admin-section">
       <h2>Usuarios Registrados</h2>
       <div class="admin-table">
-        <table>
+        <table id="usuarios-table">
           <thead>
             <tr>
               <th>ID</th>
@@ -60,48 +62,16 @@
               <th>Acciones</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td>@admin</td>
-              <td>admin@flixy.com</td>
-              <td>Administrador</td>
-              <td>
-                <select class="role-select">
-                  <option value="admin">Administrador</option>
-                  <option value="mod">Moderador</option>
-                  <option value="user">Usuario</option>
-                </select>
-              </td>
-              <td>
-                <button class="delete-user-btn" data-user-id="1">🗑️ Eliminar</button>
-              </td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td>@user_normal</td>
-              <td>user@example.com</td>
-              <td>Usuario</td>
-              <td>
-                <select class="role-select">
-                  <option value="admin">Administrador</option>
-                  <option value="mod">Moderador</option>
-                  <option value="user" selected>Usuario</option>
-                </select>
-              </td>
-              <td>
-                <button class="delete-user-btn" data-user-id="2">🗑️ Eliminar</button>
-              </td>
-            </tr>
+          <tbody id="usuarios-body">
+            <!-- Aquí se llenarán los usuarios -->
           </tbody>
         </table>
       </div>
+      <button id="load-more-btn">➡️ Cargar más</button>
     </section>
+
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script>
-    
-  </script>
 </body>
 </html>

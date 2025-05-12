@@ -34,12 +34,11 @@ class Roles(models.Model):
 
 class Canales(models.Model):
     id_canal = models.AutoField(primary_key=True)
-    nombre_canal = models.CharField(unique=True, max_length=30)
-    id_usuario = models.ForeignKey('Usuarios', models.DO_NOTHING, db_column='id_usuario')
+    nombre_canal = models.CharField(max_length=30, unique=True)
+    id_usuario = models.ForeignKey('Usuarios', on_delete=models.CASCADE, db_column='id_usuario')
 
     class Meta:
-        managed = False
-        db_table = 'canales'
+        db_table = 'Canales'
 
 class PasswordResetToken(models.Model):
     id_usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE)  # Relacionado con el modelo de usuario
