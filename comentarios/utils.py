@@ -44,18 +44,17 @@ def serializar_comentario(comentario):
 
     return comentario_dict
 
-def ajustar_hora(fecha):
-    # Establecer el locale en español (intenta primero es_MX, luego es_ES)
-    try:
-        locale.setlocale(locale.LC_TIME, 'es_MX.UTF-8')
-    except locale.Error:
-        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+MESES_ES = {
+    1: "enero", 2: "febrero", 3: "marzo", 4: "abril",
+    5: "mayo", 6: "junio", 7: "julio", 8: "agosto",
+    9: "septiembre", 10: "octubre", 11: "noviembre", 12: "diciembre"
+}
 
-    # Ajustar si la fecha es naive (sin zona horaria)
+def ajustar_hora(fecha):
     if timezone.is_naive(fecha):
-        fecha = fecha + timedelta(hours=-6)  # Ajuste manual a UTC-6
+        fecha = fecha + timedelta(hours=-6)
     else:
         fecha = timezone.localtime(fecha)
 
-    # Devolver la fecha en formato español
-    return fecha.strftime('%d de %B de %Y, %H:%M')
+    return f"{fecha.day} de {MESES_ES[fecha.month]} de {fecha.year}, {fecha.strftime('%H:%M')}"
+

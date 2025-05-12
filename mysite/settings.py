@@ -23,7 +23,8 @@ load_dotenv(dotenv_path=BASE_DIR / '.env')  # carga el archivo .env
 
 #En este directorio se almacenan los archivos SOLO PARA PRUEBAS EN LO QUE SE IMPLEMENTA LA NUBE
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -32,8 +33,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 SECRET_KEY = 'django-insecure-ulioiszlp$tl5)^mi2omwk3dvji_9oc+d*3!68dl5%&6+#s8&!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
+# Cambia esto según tu dominio/IP
 ALLOWED_HOSTS = ['*']
 
 
@@ -118,6 +120,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://flixy.ddns.net",
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -134,7 +140,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = '/home/ubuntu/Desktop/proyectos/flixy/static'
+  # Ojo que esto es diferente de STATICFILES_DIRS
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
