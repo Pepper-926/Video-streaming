@@ -38,7 +38,7 @@ class Canales(models.Model):
     id_usuario = models.ForeignKey('Usuarios', on_delete=models.CASCADE, db_column='id_usuario')
 
     class Meta:
-        db_table = 'Canales'
+        db_table = 'canales'
 
 class PasswordResetToken(models.Model):
     id_usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE)  # Relacionado con el modelo de usuario
@@ -48,7 +48,7 @@ class PasswordResetToken(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'canales'
+        db_table = 'passwordresettoken'
 
 class Seguidores(models.Model):
     id = models.AutoField(primary_key=True)

@@ -118,4 +118,7 @@ class Historial(models.Model):
     class Meta:
         db_table = 'historial'
         unique_together = (('id_usuario', 'id_video', 'fecha_visto'),)
-        verbose_name_plural = 'Historial'     
+        verbose_name_plural = 'Historial'  
+
+
+

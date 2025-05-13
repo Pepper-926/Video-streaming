@@ -1,10 +1,11 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from videos.decoradores import verificar_token
 from django.http import JsonResponse
 from videos.decoradores import verificar_token
 from videos.models import Videos
-from usuarios.models import Usuarios, Roles
-from videos.models import Canales,Historial, Seguidores, LikesDislikesVideos, VideosEtiquetas, Comentarios
+from usuarios.models import Usuarios, Roles, Canales,Seguidores
+from videos.models import Historial, LikesDislikesVideos, VideosEtiquetas
+from comentarios.models import Comentarios
 from django.core.paginator import Paginator
 import json
 from services.s3_storage import S3Manager
@@ -46,17 +47,17 @@ def eliminar_usuario_y_canal(request, usuario_id):
             canal = get_object_or_404(Canales, id_usuario=usuario)
 
             # Eliminar historial
-            Historial.objects.filter(usuario=usuario).delete()
+            Historial.objects.filter(id_usuario=usuario).delete()
 
             # Eliminar seguidores
-            Seguidores.objects.filter(usuario=usuario).delete()
+            Seguidores.objects.filter(seguidor=usuario).delete()
 
             # Eliminar videos y todo lo relacionado
-            videos = Videos.objects.filter(canal=canal)
+            videos = Videos.objects.filter(id_canal=canal)
             for video in videos:
-                LikesDislikesVideos.objects.filter(video=video).delete()
-                VideosEtiquetas.objects.filter(video=video).delete()
-                Comentarios.objects.filter(video=video).delete()
+                LikesDislikesVideos.objects.filter(id_video=video).delete()
+                VideosEtiquetas.objects.filter(id_video=video).delete()
+                Comentarios.objects.filter(id_video=video).delete()
                 video.delete()
 
             # Eliminar canal
@@ -73,7 +74,7 @@ def eliminar_usuario_y_canal(request, usuario_id):
 def eliminar_videos_usuario(request, usuario_id):
     try:
         # Obtener los videos del usuario
-        videos = Videos.objects.filter(canal__id_usuario=usuario_id)
+        videos = Videos.objects.filter(id_canal=usuario_id)
 
         # Crear instancia de S3Manager para manejar la eliminación en la nube
         s3 = S3Manager()

@@ -27,10 +27,19 @@ function cargarUsuarios() {
             `;
             usuariosContainer.appendChild(tr);
 
-            // Añadir evento para eliminar el usuario
             tr.querySelector('.delete-user-btn').addEventListener('click', function() {
-              eliminarUsuario(usuario.id_usuario, tr);
+              const userId = usuario.id_usuario;  // ← tomas el ID directamente del objeto
+              if (confirm(`¿Eliminar al usuario ID ${userId}? Esta acción no se puede deshacer.`)) {
+                eliminarVideosUsuario(userId)
+                  .then(() => {
+                    eliminarUsuario(userId, tr);
+                  })
+                  .catch(error => {
+                    console.error("Error al eliminar los videos:", error);
+                  });
+              }
             });
+
 
             // Añadir evento para cambiar el rol
             tr.querySelector('.role-select').addEventListener('change', function() {
@@ -64,8 +73,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-// Función para eliminar un usuario (y sus videos relacionados)
-function eliminarUsuario(usuarioId) {
+// Función para eliminar un usuario 
+/*function eliminarUsuario(usuarioId) {
   fetch(`/eliminar_usuario_y_canal/${usuarioId}/`, {  // Llamamos la URL de eliminación
     method: 'POST',
     headers: {
@@ -86,11 +95,36 @@ function eliminarUsuario(usuarioId) {
     console.error('Error al eliminar el usuario:', error);
     alert('Hubo un error al intentar eliminar el usuario');
   });
+}*/
+
+function eliminarUsuario(usuarioId) {
+  return fetch(`/eliminar_usuario_y_canal/${usuarioId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Usuario eliminado exitosamente');
+    } else {
+      alert('Error al eliminar el usuario: ' + data.message);
+    }
+    return data;
+  })
+  .catch(error => {
+    console.error('Error al eliminar el usuario:', error);
+    alert('Hubo un error al intentar eliminar el usuario');
+    throw error;
+  });
 }
 
+
+
 // Función para eliminar los videos asociados a un usuario en la nube (usando la URL de videos)
-function eliminarVideosUsuario(usuarioId) {
-  fetch(`/videos/usuario/${usuarioId}`, {  // Aquí la URL del endpoint para eliminar videos relacionados
+/*function eliminarVideosUsuario(usuarioId) {
+  fetch(`/videos/usuario/${usuarioId}/`, {  // Aquí la URL del endpoint para eliminar videos relacionados
     method: 'DELETE',
     headers: {
       'X-CSRFToken': getCookie('csrftoken'),  // CSRF token
@@ -107,18 +141,30 @@ function eliminarVideosUsuario(usuarioId) {
   .catch(error => {
     console.error('Error al eliminar los videos de la nube:', error);
   });
+} */
+
+function eliminarVideosUsuario(usuarioId) {
+  return fetch(`/videos/usuario/${usuarioId}/`, {
+    method: 'DELETE',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('Videos eliminados de la nube');
+    } else {
+      console.warn('Error al eliminar los videos:', data.message);
+    }
+    return data; // <-- Devuelve la respuesta para que el .then siguiente la reciba
+  })
+  .catch(error => {
+    console.error('Error al eliminar los videos de la nube:', error);
+    throw error; // <-- Lanza el error para que el .catch global lo capture
+  });
 }
 
-// Añadir evento de clic a los botones de eliminación de usuario
-document.querySelectorAll('.delete-user-btn').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    const usuarioId = btn.getAttribute('data-user-id'); // Obtener el ID del usuario
-    if (confirm(`¿Estás seguro de eliminar al usuario ID ${usuarioId}?`)) {
-      eliminarUsuario(usuarioId);  // Eliminar el usuario
-      eliminarVideosUsuario(usuarioId);  // Eliminar los videos del usuario
-    }
-  });
-});
 
 
 // Función para cambiar el rol de un usuario
