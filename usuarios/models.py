@@ -35,7 +35,10 @@ class Roles(models.Model):
 class Canales(models.Model):
     id_canal = models.AutoField(primary_key=True)
     nombre_canal = models.CharField(unique=True, max_length=30)
-    id_usuario = models.ForeignKey('Usuarios', models.DO_NOTHING, db_column='id_usuario')
+    id_usuario = models.ForeignKey(
+    'Usuarios',
+    on_delete=models.CASCADE
+    )
 
     class Meta:
         managed = False
