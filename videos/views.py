@@ -281,24 +281,18 @@ class VideoDetailsViews(View):
         except Exception as e:
            return JsonResponse({'error': str(e)}, status=500)
 
-    
     def delete(self, request, video_id):
-        try:
-            # Eliminar carpeta de S3
-            s3 = S3Manager()
-            s3.delete_folder(f'videos/video{video_id}/')
+            try:
+                # Eliminar objeto en la base de datos
+                video = Videos.objects.get(id_video=video_id)
+                video.delete()
+                return JsonResponse({'ok': True})
 
-            # Eliminar objeto en la base de datos
-            video = Videos.objects.get(id_video=video_id)
-            video.delete()
+            except Videos.DoesNotExist:
+                raise Http404("Video no encontrado")
 
-            return JsonResponse({'ok': True})
-
-        except Videos.DoesNotExist:
-            raise Http404("Video no encontrado")
-
-        except Exception as e:
-            return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+            except Exception as e:
+                return JsonResponse({'ok': False, 'error': str(e)}, status=500)
 
     def put(self, request, video_id):
         try:
