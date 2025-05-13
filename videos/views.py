@@ -284,10 +284,6 @@ class VideoDetailsViews(View):
     
     def delete(self, request, video_id):
         try:
-            # Eliminar carpeta de S3
-            s3 = S3Manager()
-            s3.delete_folder(f'videos/video{video_id}/')
-
             # Eliminar objeto en la base de datos
             video = Videos.objects.get(id_video=video_id)
             video.delete()

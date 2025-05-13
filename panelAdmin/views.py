@@ -37,27 +37,21 @@ def approve_video(request, video_id):
     
 @verificar_token
 def eliminar_usuario_y_canal(request, usuario_id):
-    if request.usuario.id_rol.id_rol != 1:  # Solo si es admin
+    if request.usuario.id_rol.rol != 'admin':
         return JsonResponse({'success': False, 'message': 'Acción no permitida.'})
 
     try:
         with transaction.atomic():
-            # Obtener al usuario
+            # Obtener usuario y canal
             usuario = get_object_or_404(Usuarios, id_usuario=usuario_id)
             canal = get_object_or_404(Canales, id_usuario=usuario)
 
-            # Eliminar historial
-            Historial.objects.filter(id_usuario=usuario).delete()
-
-            # Eliminar seguidores
-            Seguidores.objects.filter(seguidor=usuario).delete()
-
-            # Eliminar videos y todo lo relacionado
+            # Obtener videos del canal
             videos = Videos.objects.filter(id_canal=canal)
+
+            # Eliminar videos uno por uno (esto sí activa post_delete y lógica adicional)
             for video in videos:
-                LikesDislikesVideos.objects.filter(id_video=video).delete()
-                VideosEtiquetas.objects.filter(id_video=video).delete()
-                Comentarios.objects.filter(id_video=video).delete()
+                # Eliminar video
                 video.delete()
 
             # Eliminar canal
@@ -68,26 +62,7 @@ def eliminar_usuario_y_canal(request, usuario_id):
 
             return JsonResponse({'success': True, 'message': 'Usuario y canal eliminados correctamente.'})
     except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    
-@verificar_token
-def eliminar_videos_usuario(request, usuario_id):
-    try:
-        # Obtener los videos del usuario
-        videos = Videos.objects.filter(id_canal=usuario_id)
-
-        # Crear instancia de S3Manager para manejar la eliminación en la nube
-        s3 = S3Manager()
-
-        # Eliminar cada video en la nube
-        for video in videos:
-            s3.delete_folder(f'videos/video{video.id_video}/')
-
-        return JsonResponse({'success': True, 'message': 'Videos eliminados de la nube.'})
-    
-    except Videos.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'No se encontraron videos para eliminar.'})
-    except Exception as e:
+        print(e)
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
     

@@ -41,7 +41,8 @@ class Canales(models.Model):
         db_table = 'canales'
 
 class PasswordResetToken(models.Model):
-    id_usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE)  # Relacionado con el modelo de usuario
+    id = models.AutoField(primary_key=True)
+    id_usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE, db_column='id_usuario') # Relacionado con el modelo de usuario
     token = models.CharField(max_length=255)  # El token de recuperación
     created_at = models.DateTimeField(default=timezone.now)  # Fecha de creación del token
     is_used = models.BooleanField(default=False)  # Indica si el token ya fue utilizado

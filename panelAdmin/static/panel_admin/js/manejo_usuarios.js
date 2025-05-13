@@ -30,13 +30,7 @@ function cargarUsuarios() {
             tr.querySelector('.delete-user-btn').addEventListener('click', function() {
               const userId = usuario.id_usuario;  // ← tomas el ID directamente del objeto
               if (confirm(`¿Eliminar al usuario ID ${userId}? Esta acción no se puede deshacer.`)) {
-                eliminarVideosUsuario(userId)
-                  .then(() => {
-                    eliminarUsuario(userId, tr);
-                  })
-                  .catch(error => {
-                    console.error("Error al eliminar los videos:", error);
-                  });
+                eliminarUsuario(userId, tr);
               }
             });
 
@@ -97,8 +91,8 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 }*/
 
-function eliminarUsuario(usuarioId) {
-  return fetch(`/eliminar_usuario_y_canal/${usuarioId}/`, {
+function eliminarUsuario(usuarioId, tr) {
+  fetch(`/eliminar_usuario_y_canal/${usuarioId}/`, {
     method: 'POST',
     headers: {
       'X-CSRFToken': getCookie('csrftoken'),
@@ -108,15 +102,14 @@ function eliminarUsuario(usuarioId) {
   .then(data => {
     if (data.success) {
       alert('Usuario eliminado exitosamente');
+      tr.remove(); // Elimina la fila de la tabla directamente
     } else {
       alert('Error al eliminar el usuario: ' + data.message);
     }
-    return data;
   })
   .catch(error => {
     console.error('Error al eliminar el usuario:', error);
     alert('Hubo un error al intentar eliminar el usuario');
-    throw error;
   });
 }
 
@@ -142,30 +135,6 @@ function eliminarUsuario(usuarioId) {
     console.error('Error al eliminar los videos de la nube:', error);
   });
 } */
-
-function eliminarVideosUsuario(usuarioId) {
-  return fetch(`/videos/usuario/${usuarioId}/`, {
-    method: 'DELETE',
-    headers: {
-      'X-CSRFToken': getCookie('csrftoken'),
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      console.log('Videos eliminados de la nube');
-    } else {
-      console.warn('Error al eliminar los videos:', data.message);
-    }
-    return data; // <-- Devuelve la respuesta para que el .then siguiente la reciba
-  })
-  .catch(error => {
-    console.error('Error al eliminar los videos de la nube:', error);
-    throw error; // <-- Lanza el error para que el .catch global lo capture
-  });
-}
-
-
 
 // Función para cambiar el rol de un usuario
 function cambiarRol(usuarioId, nuevoRol) {
