@@ -36,7 +36,7 @@ SECRET_KEY = 'django-insecure-ulioiszlp$tl5)^mi2omwk3dvji_9oc+d*3!68dl5%&6+#s8&!
 DEBUG = False
 
 # Cambia esto según tu dominio/IP
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['flixy.ddns.net', 'localhost', '127.0.0.1']
 
 
 # Application definition
