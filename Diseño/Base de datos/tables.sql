@@ -76,7 +76,6 @@ CREATE TABLE Likes_Dislikes_Videos (
     id_usuario INT NOT NULL,
     id_video INT NOT NULL,
     tipo_reaccion BOOLEAN NOT NULL,
-    fecha_reaccion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_likes_dislikes_usuario FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
     CONSTRAINT fk_likes_dislikes_video FOREIGN KEY (id_video) REFERENCES Videos(id_video) ON DELETE CASCADE,
     CONSTRAINT unique_usuario_video UNIQUE (id_usuario, id_video);
